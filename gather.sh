@@ -18,7 +18,6 @@ echo -e "${CYAN}                                                                
 # TODO add checks on installed programs
 # TODO create an installer
 # TODO check where improve the perfomance
-# TODO fuzzing-template is not well maintained, find an alternative or fork it (automatically retrieve new payloads)
 # TODO add search for CIDR/IP? (dirsearch)
 # TODO Shodan dork? unocver ?
 # TODO scan for domain
@@ -228,6 +227,7 @@ retrive_params(){
     paramspider -l $targets  1>/dev/null 2> $log 
     if [ "$(ls -A $(pwd)/results/)" ]; then
         cat $(pwd)/results/* >> $targets_url
+        rm -rf $(pwd)/results
     fi
     echo -e "${GREEN}[+] Parameters discover completed. Results saved in:${NC}${CYAN}$targets_url${NC}"
 }
@@ -235,12 +235,12 @@ retrive_params(){
 nuclei_check() {
     echo -e "${YELLOW}[-] Start enumeration with Nuclei${NC}"
     nuclei --silent -ut >/dev/null
-    nuclei --silent -t technologies -l $live_target  > $technologies
-    nuclei --silent -t cves -l $live_target  > $cves
+    nuclei --silent -fr -t technologies -l $live_target  > $technologies
+    nuclei --silent -fr -t cves -l $live_target  > $cves
     # cat $targets | nuclei -as --silent > $nuclei_vuln # not work
-    nuclei --silent -t fuzzing-templates -dast -list $targets_url > $nuclei_vuln
-    nuclei --silent -id http-missing-security-headers -list $targets > $nuclei_headers
-    nuclei --silent -t takeovers -list $live_target > $takeover
+    nuclei --silent  -dast -list $targets_url > $nuclei_vuln
+    nuclei --silent -fr -id http-missing-security-headers -list $targets > $nuclei_headers
+    nuclei --silent -fr -t takeovers -list $live_target > $takeover
     echo -e "${GREEN}[+] Nuclei enumeration completed. Results saved in:${NC}${CYAN}\n$technologies\n$cves\n$nuclei_vuln\n${CYAN}\n$takeover\n$nuclei_headers\n${NC}"
 }
 
@@ -256,7 +256,7 @@ dalfox_check(){
 
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    katana  -l $targets --silent -em js > $statics
+    katana  -list $targets --silent -em js > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
         python3 /usr/bin/SecretFinder.py -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
