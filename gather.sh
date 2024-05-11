@@ -16,7 +16,6 @@ echo -e "${CYAN}                                                                
 
 # after subdomains repeat the retrieval with katana???
 # TODO add checks on installed programs
-# TODO create an installer
 # TODO check where improve the perfomance
 # TODO add search for CIDR/IP? (dirsearch)
 # TODO Shodan dork? unocver ?
@@ -35,6 +34,7 @@ echo -e "${CYAN}                                                                
 #subfinder_path
 #paramspider_path
 #secretfinder_path
+#gowitness_path
 
 
 dns_result=$(pwd)/dns_ptr.txt  # domain retrived from IP
@@ -259,7 +259,7 @@ secret_check(){
     katana  -list $targets --silent -em js > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
-        python3 /usr/bin/SecretFinder.py -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
+        secretfinder -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
     else
         echo -e "${YELLOW}[-] Statics not found. SecretFinder skipped${NC}"
@@ -267,7 +267,7 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding with nuclei ${NC}"
     nuclei -t javascript/enumeration -l $targets --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
-    nuclei -t JSA -l $targets --silent >> $nuclei_findings
+    nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
     echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC}"
 }
 
@@ -275,16 +275,16 @@ secret_check(){
 
 dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
-    python3 /usr/bin/dirsearch.py -l $live_target --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
-    #python3 /usr/bin/dirsearch.py --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    #dirsearch -l $live_target --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     echo -e "${GREEN}[+] Directory enumeration completed. Results saved in:${NC}${CYAN}$dirsearch${NC}"
 }
 
 screenshot() {
     echo -e "${YELLOW}[-] Take screenshots ${NC}"
     gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>$log
-    gowitness file -f $live_target -F --disable-logging 2>$log
-    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC} for check the report${NC}"
+    #gowitness file -f $live_target -F --disable-logging 2>$log
+    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW}for check the report${NC}"
 }
 
 
@@ -296,6 +296,10 @@ passive() {
     nmap_check
     dns_enum
     statics_enum
+    if [ ! -s $target ]; then
+        echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
+        exit 0
+    fi
     search_subdomain
     screenshot
     secret_check
