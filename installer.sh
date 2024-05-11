@@ -1,3 +1,5 @@
+#!/bin/bash
+
 go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latestsudo mv ~/go/bin/nuclei /usr/local/bin/
 go install github.com/projectdiscovery/katana/cmd/katana@latestsudo mv ~/go/bin/katana /usr/local/bin/
 go install github.com/hahwul/dalfox/v2@latestsudo mv ~/go/bin/dalfox /usr/local/bin/
@@ -19,7 +21,8 @@ cd /opt/dirsearchsudo python3 -m pip install -r requirements.txt
 ln -s /opt/ParamSpider/dirsearch.py /usr/local/bin/dirsearchcd -
 
 git clone https://github.com/m4ll0k/SecretFinder.git secretfindercd secretfinder
-python3 -m pip install -r requirements.txtsudo mv SecretFinder.py /usr/local/bin/secretfinder
+python3 -m pip install -r requirements.txt
+sudo mv SecretFinder.py /usr/local/bin/secretfinder
 cd -rm -rf secretfinder
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/credentials-disclosure-all.yaml
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/some-PIIs.yamlmkdir ~/nuclei-templates/JSA
