@@ -258,7 +258,7 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $targets --silent -em js > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
-    if [[ -s $static ]]; then
+    if [[ -s $statics ]]; then
         secretfinder -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
     else
