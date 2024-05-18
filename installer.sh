@@ -12,7 +12,7 @@ go install github.com/sensepost/gowitness@latestsudo mv ~/go/bin/gowitness /usr/
 curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip
 unzip findomain-linux.zip
 chmod +x findomain
-sudo mv findomain /usr/bin/local/findomain
+sudo mv findomain /usr/local/bin/findomain
 rm -rf findomain
 rm findomain-linux.zip
 
@@ -31,8 +31,16 @@ git clone https://github.com/m4ll0k/SecretFinder.git secretfinder
 cd secretfinder
 python3 -m pip install -r requirements.txt
 sudo mv SecretFinder.py /usr/local/bin/secretfinder
-cd -rm -rf secretfinder
+cd -
+rm -rf secretfinder
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/credentials-disclosure-all.yaml
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/some-PIIs.yamlmkdir ~/nuclei-templates/JSA
 mv some-PIIs.yaml ~/nuclei-templates/JSA/
 mv credentials-disclosure-all.yaml ~/nuclei-templates/JSA/
+
+sudo git clone https://github.com/GerbenJavado/LinkFinder.git /opt/LinkFinder
+cd /opt/LinkFinder
+sudo chmod +x linkfinder.py
+sudo python3 -m pip install .
+sudo ln -s /opt/LinkFinder/linkfinder.py /usr/local/bin/linkfinder
+cd -
