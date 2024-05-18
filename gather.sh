@@ -35,6 +35,7 @@ echo -e "${CYAN}                                                                
 #paramspider_path
 #secretfinder_path
 #gowitness_path
+#linkfinder_path
 
 
 dns_result=$(pwd)/dns_ptr.txt  # domain retrived from IP
@@ -56,6 +57,7 @@ dirsearch=$(pwd)/dirsearch.txt
 takeover=$(pwd)/takeover.txt
 log=$(pwd)/log.log
 dalfox_log=$(pwd)/dalfox.log
+link=$(pwd)/link.txt
 
 
 usage() {
@@ -182,7 +184,7 @@ dns_enum() {
 
 statics_enum() {
     echo -e "${YELLOW}[-] Start statics enumeration with Katana${NC}"
-    katana -silent -list $dns_result> $katana_result 2>> $log
+    katana -silent -list $dns_result -d 5 -jc -kf all -fx > $katana_result 2>> $log
     echo -e "${GREEN}[+] Statics enumeration completed. Result saved in:${NC} ${CYAN} $katana_result${NC}"
     echo -e "${YELLOW}[-] Recovering domains${NC}"
     for url in $(cat $katana_result); do
@@ -223,7 +225,7 @@ search_subdomain() {
 retrive_params(){
     local temp=$(pwd)/temp.tmp
     echo -e "${YELLOW}[-] Start parameters discover${NC}"
-    katana --silent -f qurl -iqp -ef css,js -list $targets > $targets_url
+    katana --silent -f qurl -iqp -ef css,js -list $targets -fx > $targets_url
     paramspider -l $targets  1>/dev/null 2> $log 
     if [ "$(ls -A $(pwd)/results/)" ]; then
         cat $(pwd)/results/* >> $targets_url
@@ -247,7 +249,7 @@ nuclei_check() {
 dalfox_check(){
     if [[ -s $targets_url ]]; then
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $targets_url --remote-payloads --waf-evasion > $dalfox_out 2> $dalfox_log
+        dalfox file $targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
@@ -256,9 +258,10 @@ dalfox_check(){
 
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    katana  -list $targets --silent -em js > $statics
+    python3 linkfinder -i $targets -d -o cli | grep -v "Running against" | grep -v "^$" >  $link
+    katana  -list $targets --silent -em js -d 5 -fx > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
-    if [[ -s $statics ]]; then
+    if [[ -s $static ]]; then
         secretfinder -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
     else
@@ -268,7 +271,7 @@ secret_check(){
     nuclei -t javascript/enumeration -l $targets --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
     nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
-    echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC}"
+    echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings and $link${NC}"
 }
 
 
