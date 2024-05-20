@@ -1,13 +1,21 @@
 #!/bin/bash
 
-go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latestsudo mv ~/go/bin/nuclei /usr/local/bin/
-go install github.com/projectdiscovery/katana/cmd/katana@latestsudo mv ~/go/bin/katana /usr/local/bin/
-go install github.com/hahwul/dalfox/v2@latestsudo mv ~/go/bin/dalfox /usr/local/bin/
-go install -v github.com/projectdiscovery/httpx/cmd/httpx@latestsudo mv ~/go/bin/httpx /usr/local/bin/
-go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latestsudo mv ~/go/bin/dnsx /usr/local/bin/
-go install github.com/tomnomnom/assetfinder@latestsudo mv ~/go/bin/assetfinder /usr/local/bin/
-go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latestsudo mv ~/go/bin/subfinder /usr/local/bin/
-go install github.com/sensepost/gowitness@latestsudo mv ~/go/bin/gowitness /usr/local/bin/
+go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
+sudo mv ~/go/bin/nuclei /usr/local/bin/
+go install github.com/projectdiscovery/katana/cmd/katana@latest
+sudo mv ~/go/bin/katana /usr/local/bin/
+go install github.com/hahwul/dalfox/v2@latest
+sudo mv ~/go/bin/dalfox /usr/local/bin/
+go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
+sudo mv ~/go/bin/httpx /usr/local/bin/
+go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
+sudo mv ~/go/bin/dnsx /usr/local/bin/
+go install github.com/tomnomnom/assetfinder@latest
+sudo mv ~/go/bin/assetfinder /usr/local/bin/
+go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
+sudo mv ~/go/bin/subfinder /usr/local/bin/
+go install github.com/sensepost/gowitness@latest
+sudo mv ~/go/bin/gowitness /usr/local/bin/
 
 curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip
 unzip findomain-linux.zip
