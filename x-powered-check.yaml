@@ -1,0 +1,22 @@
+id: x-powered-check
+
+info:
+  name: Check the headers response
+  author: Deda
+  severity: low
+  tags: technologies,exposure,headers
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}"
+    matchers:
+    - type: word
+      name: X-Powered-by
+      words:
+        - "X-Powered-By"
+      part: header
+    extractors:
+    - type: kval
+      kval: 
+        - x_powered_by
