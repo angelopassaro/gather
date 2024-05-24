@@ -241,7 +241,7 @@ nuclei_check() {
     nuclei --silent -fr -t cves -l $live_target  > $cves
     # cat $targets | nuclei -as --silent > $nuclei_vuln # not work
     nuclei --silent  -dast -list $targets_url > $nuclei_vuln
-    nuclei --silent -fr -id http-missing-security-headers -list $targets > $nuclei_headers
+    nuclei --silent -fr -id http-missing-security-headers -list $live_target > $nuclei_headers
     nuclei --silent -fr -t takeovers -list $live_target > $takeover
     echo -e "${GREEN}[+] Nuclei enumeration completed. Results saved in:${NC}${CYAN}\n$technologies\n$cves\n$nuclei_vuln\n${CYAN}\n$takeover\n$nuclei_headers\n${NC}"
 }
