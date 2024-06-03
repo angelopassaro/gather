@@ -39,6 +39,3 @@ The output in save in current directory
 [LinkFinder](https://github.com/GerbenJavado/LinkFinder)
 
 [Dalfox](https://github.com/hahwul/dalfox)
-
-# TODO
-Scand for FQDN list
