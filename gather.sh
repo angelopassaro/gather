@@ -126,40 +126,60 @@ check_scope() {
     local temp=$(pwd)/temp.tmp
     
     echo -e "${YELLOW}[-] Checking the scope${NC}"
-    
-    sort -u $1 | dnsx -silent -a -resp -nc > $result_tmp
+    if [ -n "$ip" ]; then
+        sort -u $1 | dnsx -silent -a -resp -nc > $result_tmp
 
-    input_type=$(check_input_type "$ip")
-    case $input_type in
-        "CIDR")
-            while IFS= read -r line; do
-                ip_wk=$(echo -e "$line" | awk '{print $3}' | grep -oP '(?<=\[).*?(?=\])')
-                if check_ip_in_cidr "$ip_wk" "$ip"; then
-                    echo $line | awk '{print $1}' >> $targets 
+        input_type=$(check_input_type "$ip")
+        case $input_type in
+            "CIDR")
+                while IFS= read -r line; do
+                    ip_wk=$(echo -e "$line" | awk '{print $3}' | grep -oP '(?<=\[).*?(?=\])')
+                    if check_ip_in_cidr "$ip_wk" "$ip"; then
+                        echo $line | awk '{print $1}' >> $targets 
+                    fi
+                done < "$result_tmp"
+                ;;
+            "IP")
+                while IFS= read -r line; do
+                    ip_wk=$(echo -e "$line" | awk '{print $3}' | grep -oP '(?<=\[).*?(?=\])')
+                    if check_ip_equality "$ip_wk" "$ip"; then
+                        echo $line | awk '{print $1}' >> $targets 
+                    fi
+                done < "$result_tmp"
+                ;;
+            *)
+                echo -e "${RED}Wrong IP: $ip_tmp${NC}"
+                ;;
+        esac
+        rm $result_tmp
+    else
+        local valid_domains=()
+        while IFS= read -r line; do
+            valid_domains+=("$line")
+        done <  "$(pwd)/$domain"
+
+        while IFS= read -r domain_value; do
+            found=false
+            for valid_domain in "${valid_domains[@]}"; do
+                if [[ "$valid_domain" == *"$domain_value"* ]]; then
+                    found=true
+                    break
                 fi
-            done < "$result_tmp"
-            ;;
-        "IP")
-            while IFS= read -r line; do
-                ip_wk=$(echo -e "$line" | awk '{print $3}' | grep -oP '(?<=\[).*?(?=\])')
-                if check_ip_equality "$ip_wk" "$ip"; then
-                    echo $line | awk '{print $1}' >> $targets 
-                fi
-            done < "$result_tmp"
-            ;;
-        *)
-            echo -e "${RED}Wrong IP: $ip_tmp${NC}"
-            ;;
-    esac
-    
+            done
+
+            if [ "$found" = true ]; then
+                echo "$domain_value" >> $targets
+            fi
+        done < "$1"
+    fi
 
     if [[ -s $targets ]]; then
         sort -u $targets > $temp && mv $temp $targets
     fi
     
     echo -e "${GREEN}[+] Scope checked${NC}"
-    rm $result_tmp
 }
+
 
 
 nmap_check(){
@@ -188,7 +208,7 @@ statics_enum() {
     echo -e "${GREEN}[+] Statics enumeration completed. Result saved in:${NC} ${CYAN} $katana_result${NC}"
     echo -e "${YELLOW}[-] Recovering domains${NC}"
     for url in $(cat $katana_result); do
-        echo -e "$url" | grep -oP "(?<=://)([^/]+)" >> "$domains_tmp"
+	    echo -e "$url" | grep -oP "(?<=://)([^/]+)" >> "$domains_tmp"
     done
     
     check_scope $domains_tmp
@@ -258,7 +278,7 @@ dalfox_check(){
 
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    python3 linkfinder -i $targets -d -o cli | grep -v "Running against" | grep -v "^$" >  $link
+    linkfinder -i $targets -d -o cli | grep -v "Running against" | grep -v "^$" >  $link
     katana  -list $targets --silent -em js -d 5 -fx > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
@@ -285,9 +305,14 @@ dir_search() {
 
 screenshot() {
     echo -e "${YELLOW}[-] Take screenshots ${NC}"
-    gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>$log
-    #gowitness file -f $live_target -F --disable-logging 2>$log
-    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW}for check the report${NC}"
+    if [ -n "$domain" ]; then
+        gowitness file -f $targets -F --disable-logging 2>$log
+    elif [ -n "$ip" ]; then
+        gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>$log
+    else
+        gowitness file -f $live_target -F --disable-logging 2>$log
+    fi
+    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW} for check the report${NC}"
 }
 
 
@@ -318,33 +343,53 @@ active() {
     echo -e "${GREEN}[+] Full scans completed${NC}"
 }
 
-while getopts ":i:a" options; do
+
+domain() {
+    cat "$domain" > $dns_result
+    statics_enum
+#    search_subdomain
+    screenshot
+   secret_check
+}
+
+
+
+while getopts ":i:d:a" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
-     ;;
+        ;;
+    d)
+        domain=${OPTARG}
+        ;;
     a)
         a_flag=true
-      ;;
+        ;;
     :)
         echo -e "${GREEN}[!] Error: Option -$OPTARG requires an argument.${NC}" >&2
         exit_abnormal
-      ;;
+        ;;
     *)
         exit_abnormal
-      ;;
+        ;;
   esac
 done
 
 
-
-if [ -z "$ip" ]; then
-  echo -e "Error: Option -i is required.\n Use -a for active scan" >&2
+if [[ -z "$ip" && -z "$domain" ]]; then
+  echo -e "${RED}Error: Option -i or -d is required.${NC}\nUse -i for IP/CIDR or -d for file with domains -a for active scan (optional)" >&2
   exit_abnormal
 else
-        passive
-    if [ "$a_flag" = true ]; then
-        active
-    fi
-    exit 0
+  if [[ -n "$ip" ]]; then
+    passive
+  fi
+
+  if [[ -n "$domain" ]]; then
+    domain
+  fi
+
+  if [[ "$a_flag" = true ]]; then
+      active
+  fi
+  exit 0
 fi
