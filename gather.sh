@@ -204,7 +204,7 @@ dns_enum() {
 
 statics_enum() {
     echo -e "${YELLOW}[-] Start statics enumeration with Katana${NC}"
-    katana -silent -list $dns_result -d 5 -jc -kf all -fx > $katana_result 2>> $log
+    katana -silent -list $dns_result -d 5 -jc -kf all -fx -xhr -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $katana_result 2>> $log
     echo -e "${GREEN}[+] Statics enumeration completed. Result saved in:${NC} ${CYAN} $katana_result${NC}"
     echo -e "${YELLOW}[-] Recovering domains${NC}"
     for url in $(cat $katana_result); do
@@ -245,7 +245,7 @@ search_subdomain() {
 retrive_params(){
     local temp=$(pwd)/temp.tmp
     echo -e "${YELLOW}[-] Start parameters discover${NC}"
-    katana --silent -f qurl -iqp -ef css,js -list $targets -fx > $targets_url
+    katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $targets -fx > $targets_url
     paramspider -l $targets  1>/dev/null 2> $log 
     if [ "$(ls -A $(pwd)/results/)" ]; then
         cat $(pwd)/results/* >> $targets_url
@@ -269,7 +269,7 @@ nuclei_check() {
 dalfox_check(){
     if [[ -s $targets_url ]]; then
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
+        dalfox file $live_target --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
@@ -279,7 +279,7 @@ dalfox_check(){
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     linkfinder -i $targets -d -o cli | grep -v "Running against" | grep -v "^$" >  $link
-    katana  -list $targets --silent -em js -d 5 -fx > $statics
+    katana  -list $targets --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
         secretfinder -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
