@@ -2,7 +2,6 @@ id: x-powered-check
 
 info:
   name: Check the headers response
-  author: Deda
   severity: low
   tags: technologies,exposure,headers
 
