@@ -36,6 +36,8 @@ echo -e "${CYAN}                                                                
 #secretfinder_path
 #gowitness_path
 #linkfinder_path
+#misconfig-mapper _path
+
 
 
 dns_result=$(pwd)/dns_ptr.txt  # domain retrived from IP
@@ -58,6 +60,8 @@ takeover=$(pwd)/takeover.txt
 log=$(pwd)/log.log
 dalfox_log=$(pwd)/dalfox.log
 link=$(pwd)/link.txt
+mapping=$(pwd)/mapping.txt
+domains=$(pwd)/domains.txt
 
 
 usage() {
@@ -247,9 +251,11 @@ retrive_params(){
     echo -e "${YELLOW}[-] Start parameters discover${NC}"
     katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $targets -fx > $targets_url
     paramspider -l $targets  1>/dev/null 2> $log 
-    if [ "$(ls -A $(pwd)/results/)" ]; then
-        cat $(pwd)/results/* >> $targets_url
-        rm -rf $(pwd)/results
+    if [ -s "$(pwd)/results/"]; then
+        if [ "$(ls -A $(pwd)/results/)" ]; then
+            cat $(pwd)/results/* >> $targets_url
+            rm -rf $(pwd)/results
+        fi
     fi
     echo -e "${GREEN}[+] Parameters discover completed. Results saved in:${NC}${CYAN}$targets_url${NC}"
 }
@@ -278,11 +284,15 @@ dalfox_check(){
 
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    linkfinder -i $targets -d -o cli | grep -v "Running against" | grep -v "^$" >  $link
+    for i in $(cat $targets);do
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" >>  $link
+    done
     katana  -list $targets --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
-        secretfinder -i $statics -g 'jquery;bootstrap;api.google.com' -o $findings >/dev/null
+        for i in $(cat $statics);do  
+            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o "$findings$i" >/dev/null
+        done
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
     else
         echo -e "${YELLOW}[-] Statics not found. SecretFinder skipped${NC}"
@@ -298,8 +308,11 @@ secret_check(){
 
 dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
-    #dirsearch -l $live_target --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
-    dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    if [ -n "$domain" ];then
+        dirsearch -l $live_target --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    else
+        dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    fi
     echo -e "${GREEN}[+] Directory enumeration completed. Results saved in:${NC}${CYAN}$dirsearch${NC}"
 }
 
@@ -313,6 +326,15 @@ screenshot() {
         gowitness file -f $live_target -F --disable-logging 2>$log
     fi
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW} for check the report${NC}"
+}
+
+mapper() {
+    echo -e "${YELLOW}[-] Mapping vulnerabilities ${NC}"
+    awk -F'.' '{print $(NF-1)}' $live_target | sort | uniq > $domains
+    for d in $(cat $domains);do
+        misconfig-mapper -target $d -service "*"  | grep -v "\[-\]" >> $mapping
+    done;
+    echo -e "${GREEN}[+] Mapping completed. Results saved in:${NC}${CYAN}$mapping${NC}"
 }
 
 
@@ -337,19 +359,20 @@ passive() {
 
 active() {
     retrive_params
+    mapper
     nuclei_check
     dalfox_check
     dir_search
-    echo -e "${GREEN}[+] Full scans completed${NC}"
+    echo -e "${GREEN}[+] Active scans completed${NC}"
 }
 
 
 domain() {
     cat "$domain" > $dns_result
     statics_enum
-#    search_subdomain
+    search_subdomain
     screenshot
-   secret_check
+    secret_check
 }
 
 
