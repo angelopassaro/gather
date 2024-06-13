@@ -251,7 +251,7 @@ retrive_params(){
     echo -e "${YELLOW}[-] Start parameters discover${NC}"
     katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $targets -fx > $targets_url
     paramspider -l $targets  1>/dev/null 2> $log 
-    if [ -s "$(pwd)/results/"]; then
+    if [ -s "$(pwd)/results/" ]; then
         if [ "$(ls -A $(pwd)/results/)" ]; then
             cat $(pwd)/results/* >> $targets_url
             rm -rf $(pwd)/results
