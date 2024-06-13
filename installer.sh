@@ -52,3 +52,10 @@ sudo chmod +x linkfinder.py
 sudo python3 -m pip install .
 sudo ln -s /opt/LinkFinder/linkfinder.py /usr/local/bin/linkfinder
 cd -
+
+
+sudo git clone https://github.com/intigriti/misconfig-mapper.git /opt/misconfig-mapper
+cd misconfig-mapper
+sudo go build -o misconfig-mapper
+mv misconfig-mapper /usr/local/bin/misconfig-mapper
+sudo rm -rf /opt/misconfig-mapper
