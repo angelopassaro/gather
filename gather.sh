@@ -284,10 +284,10 @@ dalfox_check(){
 
 secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    for i in $(cat $targets);do
+    katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
+    for i in $(cat $katana_result );do
         linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" >>  $link
     done
-    katana  -list $targets --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
         for i in $(cat $statics);do  
@@ -309,7 +309,7 @@ secret_check(){
 dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
-        dirsearch -l $live_target --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+        dirsearch -l $(cat $target | httpx --silent ) --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     else
         dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     fi
@@ -330,7 +330,7 @@ screenshot() {
 
 mapper() {
     echo -e "${YELLOW}[-] Mapping vulnerabilities ${NC}"
-    awk -F'.' '{print $(NF-1)}' $live_target | sort | uniq > $domains
+    awk -F'.' '{print $(NF-1)}' $(cat $target | httpx --silent ) | sort | uniq > $domains
     for d in $(cat $domains);do
         misconfig-mapper -target $d -service "*"  | grep -v "\[-\]" >> $mapping
     done;
