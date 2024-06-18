@@ -55,7 +55,7 @@ cd -
 
 
 sudo git clone https://github.com/intigriti/misconfig-mapper.git /opt/misconfig-mapper
-cd misconfig-mapper
+cd /opt/misconfig-mapper
 sudo go build -o misconfig-mapper
-mv misconfig-mapper /usr/local/bin/misconfig-mapper
+sudo mv misconfig-mapper /usr/local/bin/misconfig-mapper
 sudo rm -rf /opt/misconfig-mapper
