@@ -62,6 +62,7 @@ dalfox_log=$(pwd)/dalfox.log
 link=$(pwd)/link.txt
 mapping=$(pwd)/mapping.txt
 domains=$(pwd)/domains.txt
+s_flag=false
 
 
 usage() {
@@ -309,7 +310,10 @@ secret_check(){
 dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
-        dirsearch -l $(cat $target | httpx --silent ) --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+    	if [[ "$s_flag" = false ]]; then
+       		httpx -l $targets --silent > $live_targe
+    	fi
+        dirsearch -l $live_target  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     else
         dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     fi
@@ -370,14 +374,16 @@ active() {
 domain() {
     cat "$domain" > $dns_result
     statics_enum
-    search_subdomain
+    if [[ "$s_flag" = true ]]; then
+       search_subdomain
+    fi
     screenshot
     secret_check
 }
 
 
 
-while getopts ":i:d:a" options; do
+while getopts ":i:d:a:s" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
@@ -387,6 +393,9 @@ while getopts ":i:d:a" options; do
         ;;
     a)
         a_flag=true
+        ;;
+    s)
+        s_flag=true
         ;;
     :)
         echo -e "${GREEN}[!] Error: Option -$OPTARG requires an argument.${NC}" >&2
