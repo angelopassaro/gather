@@ -291,8 +291,11 @@ secret_check(){
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
+        mkdir $(pwd)/findings;
+        c=1
         for i in $(cat $static);do  
-            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o "$findings$i" >/dev/null
+            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o $(pwd)/findings/$c.html >/dev/null
+            ((c=c+1))
         done
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
     else
