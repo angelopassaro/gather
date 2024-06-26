@@ -66,7 +66,7 @@ s_flag=false
 
 
 usage() {
-  echo -e "Usage: $0 [-i IP/CIDR]" 1>&2
+  echo -e "Use -i for IP/CIDR or -d for file with domains\n -a for active scan (optional)\n -s for enable subdomain search with domain" 1>&2
 }
 
 exit_abnormal() {
@@ -287,11 +287,11 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" >>  $link
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     if [[ -s $static ]]; then
-        for i in $(cat $statics);do  
+        for i in $(cat $static);do  
             secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o "$findings$i" >/dev/null
         done
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
@@ -302,7 +302,7 @@ secret_check(){
     nuclei -t javascript/enumeration -l $targets --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
     nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
-    echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings and $link${NC}"
+    echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$link${NC}"
 }
 
 
@@ -383,7 +383,7 @@ domain() {
 
 
 
-while getopts ":i:d:a:s" options; do
+while getopts ":i:d:as" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
@@ -409,7 +409,6 @@ done
 
 
 if [[ -z "$ip" && -z "$domain" ]]; then
-  echo -e "${RED}Error: Option -i or -d is required.${NC}\nUse -i for IP/CIDR or -d for file with domains -a for active scan (optional)" >&2
   exit_abnormal
 else
   if [[ -n "$ip" ]]; then
