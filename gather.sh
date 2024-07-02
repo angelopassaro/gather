@@ -276,7 +276,7 @@ nuclei_check() {
 dalfox_check(){
     if [[ -s $targets_url ]]; then
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $live_target --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
+        dalfox file $live_target --remote-payloads=portswigger,payloadbox -b --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
