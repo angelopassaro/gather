@@ -352,8 +352,8 @@ passive() {
     #    echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
     #    exit 0
     #fi
-    #screenshot
-    #secret_check
+    screenshot
+    secret_check
     echo -e "${GREEN}[+]Passive scans completed${NC}"
 }
 
