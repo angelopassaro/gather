@@ -14,12 +14,6 @@ echo -e "${CYAN}|  |__| |  /  _____  \   |  |     |  |  |  | |  |____ |  |\  \--
 echo -e "${CYAN} \______| /__/     \__\  |__|     |__|  |__| |_______|| _| \`._____|${NC}";
 echo -e "${CYAN}                                                                   ${NC}";
 
-# after subdomains repeat the retrieval with katana???
-# TODO add checks on installed programs
-# TODO check where improve the perfomance
-# TODO add search for CIDR/IP? (dirsearch)
-# TODO Shodan dork? unocver ?
-# TODO scan for domain
 
 
 #nmap_path
@@ -63,7 +57,6 @@ link=$(pwd)/link.txt
 mapping=$(pwd)/mapping.txt
 domains=$(pwd)/domains.txt
 s_flag=false
-myip=""
 
 
 usage() {
@@ -182,7 +175,8 @@ check_scope() {
     if [[ -s $targets ]]; then
         sort -u $targets > $temp && mv $temp $targets
     fi
-    
+
+    httpx -l $targets --silent > $live_target 
     echo -e "${GREEN}[+] Scope checked${NC}"
 }
 
@@ -210,15 +204,15 @@ dns_enum() {
 
 statics_enum() {
     echo -e "${YELLOW}[-] Start statics enumeration with Katana${NC}"
-    katana -silent -list $dns_result -d 5 -jc -kf all -fx -xhr -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $katana_result 2>> $log
+    katana -silent -list $live_target  -d 5 -jc -kf all -fx -xhr -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $katana_result 2>> $log
     echo -e "${GREEN}[+] Statics enumeration completed. Result saved in:${NC} ${CYAN} $katana_result${NC}"
     echo -e "${YELLOW}[-] Recovering domains${NC}"
-    for url in $(cat $katana_result); do
-	    echo -e "$url" | grep -oP "(?<=://)([^/]+)" >> "$domains_tmp"
-    done
+    #for url in $(cat $katana_result); do
+	#    echo -e "$url" | grep -oP "(?<=://)([^/]+)" >> "$domains_tmp"
+    #done
     
-    check_scope $domains_tmp
-    rm $domains_tmp
+    #check_scope $domains_tmp
+    #rm $domains_tmp
     echo -e "${GREEN}[+] Domains recovered${NC}"
 }
 
@@ -230,10 +224,10 @@ search_subdomain() {
     local tmp="$(pwd)/tmp.txt" 
     
     echo -e "${YELLOW}[-] Start finding subdomains${NC}"
-    cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
-    cat $targets  | assetfinder --subs-only | grep -v "[INF]"  > $sub1 2>> $log &
-    findomain -q -f $targets > $sub2 2>> $log &
-    subfinder -dL $targets -silent -all -nc > $sub3 2>> $log &
+    #cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
+    cat $dns_result | assetfinder --subs-only | grep -v "[INF]"  > $sub1 2>> $log &
+    findomain -q -f $dns_result > $sub2 2>> $log &
+    subfinder -dL $dns_result -silent -all -nc > $sub3 2>> $log &
 
     wait
     echo -e "${YELLOW}[-] Merge of subdomains${NC}"
@@ -242,7 +236,6 @@ search_subdomain() {
     sort -u $tmp > $subdomains
     rm $tmp $(pwd)/subdomains-*
     check_scope $subdomains
-    httpx -l $targets --silent > $live_target 
     echo -e "${GREEN}[+] Subdomain enumeration completed. Result saved in:${NC} ${CYAN}$subdomains${NC}"
     echo -e "${GREEN}[+] Valid targets saved in:${NC} ${CYAN}$targets${NC}\n${GREEN}[+] Live targets saved in:${NC}${CYAN}$live_target${NC}"
 }
@@ -251,8 +244,8 @@ search_subdomain() {
 retrive_params(){
     local temp=$(pwd)/temp.tmp
     echo -e "${YELLOW}[-] Start parameters discover${NC}"
-    katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $targets -fx > $targets_url
-    paramspider -l $targets  1>/dev/null 2> $log 
+    katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $live_target -fx > $targets_url
+    paramspider -l $live_target   1>/dev/null 2>> $log 
     if [ -s "$(pwd)/results/" ]; then
         if [ "$(ls -A $(pwd)/results/)" ]; then
             cat $(pwd)/results/* >> $targets_url
@@ -277,7 +270,7 @@ nuclei_check() {
 dalfox_check(){
     if [[ -s $targets_url ]]; then
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $live_target --remote-payloads=portswigger,payloadbox -b $myip --waf-evasion > $dalfox_out 2> $dalfox_log
+        dalfox file $live_target --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
@@ -303,7 +296,7 @@ secret_check(){
         echo -e "${YELLOW}[-] Statics not found. SecretFinder skipped${NC}"
     fi
     echo -e "${YELLOW}[-] Start secrets finding with nuclei ${NC}"
-    nuclei -t javascript/enumeration -l $targets --silent > $nuclei_findings
+    nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
     nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
     echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$link${NC}"
@@ -315,7 +308,7 @@ dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
     	if [[ "$s_flag" = false ]]; then
-       		httpx -l $targets --silent > $live_targe
+       		httpx -l $targets --silent > $live_target
     	fi
         dirsearch -l $live_target  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     else
@@ -329,9 +322,9 @@ screenshot() {
     if [ -n "$domain" ]; then
         gowitness file -f $targets -F --disable-logging 2>$log
     elif [ -n "$ip" ]; then
-        gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>$log
+        gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>>$log
     else
-        gowitness file -f $live_target -F --disable-logging 2>$log
+        gowitness file -f $live_target -F --disable-logging 2>>$log
     fi
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW} for check the report${NC}"
 }
@@ -353,14 +346,14 @@ passive() {
     echo -e "${GREEN}[+] The output will be saved in the directory:${NC}${CYAN}$(pwd)${NC}"
     nmap_check
     dns_enum
-    statics_enum
-    if [ ! -s $target ]; then
-        echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
-        exit 0
-    fi
     search_subdomain
-    screenshot
-    secret_check
+    statics_enum
+    #if [ ! -s $target ]; then
+    #    echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
+    #    exit 0
+    #fi
+    #screenshot
+    #secret_check
     echo -e "${GREEN}[+]Passive scans completed${NC}"
 }
 
@@ -377,17 +370,17 @@ active() {
 
 domain() {
     cat "$domain" > $dns_result
-    statics_enum
     if [[ "$s_flag" = true ]]; then
        search_subdomain
     fi
+    statics_enum
     screenshot
     secret_check
 }
 
 
 
-while getopts ":i:d:asb" options; do
+while getopts ":i:d:as" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
@@ -400,9 +393,6 @@ while getopts ":i:d:asb" options; do
         ;;
     s)
         s_flag=true
-        ;;
-    b)
-        myip=${OPTARG}
         ;;
     :)
         echo -e "${GREEN}[!] Error: Option -$OPTARG requires an argument.${NC}" >&2
