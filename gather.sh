@@ -278,17 +278,19 @@ dalfox_check(){
 }
 
 secret_check(){
+    local link_tmp="$(pwd)/link_tmp.txt"
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link_tmp &
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
+    
     if [[ -s $statics ]]; then
         mkdir $(pwd)/findings;
         c=1
         for i in $(cat $statics);do  
-            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o $(pwd)/findings/$c.html >/dev/null
+            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o $(pwd)/findings/$c.html >/dev/null &
             ((c=c+1))
         done
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
@@ -299,6 +301,9 @@ secret_check(){
     nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
     nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
+    wait
+    sort -u $link_tmp | grep -ivf "$(pwd)/clear-list.txt" > $link 
+    rm $link_tmp
     echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$link${NC}"
 }
 
