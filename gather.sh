@@ -284,10 +284,10 @@ secret_check(){
         linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
-    if [[ -s $static ]]; then
+    if [[ -s $statics ]]; then
         mkdir $(pwd)/findings;
         c=1
-        for i in $(cat $static);do  
+        for i in $(cat $statics);do  
             secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o $(pwd)/findings/$c.html >/dev/null
             ((c=c+1))
         done
