@@ -270,7 +270,7 @@ nuclei_check() {
 dalfox_check(){
     if [[ -s $targets_url ]]; then
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $live_target --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
+        dalfox file $targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
@@ -278,19 +278,18 @@ dalfox_check(){
 }
 
 secret_check(){
-    local link_tmp="$(pwd)/link_tmp.txt"
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link_tmp &
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" >>  $link
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     
     if [[ -s $statics ]]; then
         mkdir $(pwd)/findings;
         c=1
-        for i in $(cat $statics);do  
-            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o $(pwd)/findings/$c.html >/dev/null &
+        for i in $($statics);do  
+            secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $(pwd)/findings/$c.txt
             ((c=c+1))
         done
         echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
@@ -301,9 +300,6 @@ secret_check(){
     nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
     nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
-    wait
-    sort -u $link_tmp | grep -ivf "$(pwd)/clear-list.txt" > $link 
-    rm $link_tmp
     echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$link${NC}"
 }
 
@@ -365,10 +361,10 @@ passive() {
 
 active() {
     retrive_params
-    mapper
     nuclei_check
     dalfox_check
     dir_search
+    mapper
     echo -e "${GREEN}[+] Active scans completed${NC}"
 }
 
