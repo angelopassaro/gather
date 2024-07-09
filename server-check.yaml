@@ -2,6 +2,7 @@ id: server-check
 
 info:
   name: Check the headers response
+  author: angelopassaro
   severity: low
   tags: technologies,exposure,headers
 
