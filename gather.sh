@@ -157,10 +157,11 @@ check_scope() {
             valid_domains+=("$line")
         done <  "$(pwd)/$domain"
 
+
         while IFS= read -r domain_value; do
             found=false
             for valid_domain in "${valid_domains[@]}"; do
-                if [[ "$valid_domain" == *"$domain_value"* ]]; then
+                if [[ "$domain_value" == *"$valid_domain" || "$domain_value" == "$valid_domain" || "$domain_value" == *".$valid_domain" ]]; then
                     found=true
                     break
                 fi
@@ -281,7 +282,7 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -ivf clear-list.txt | >>  $link
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -ivf clear-list.clean | >>  $link
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     
@@ -373,6 +374,9 @@ domain() {
     cat "$domain" > $dns_result
     if [[ "$s_flag" = true ]]; then
        search_subdomain
+       exit
+    else
+        httpx -l "$domain" --silent > $live_target 
     fi
     statics_enum
     screenshot
