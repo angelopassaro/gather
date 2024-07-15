@@ -374,7 +374,6 @@ domain() {
     cat "$domain" > $dns_result
     if [[ "$s_flag" = true ]]; then
        search_subdomain
-       exit
     else
         httpx -l "$domain" --silent > $live_target 
     fi
