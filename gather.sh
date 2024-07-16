@@ -279,24 +279,32 @@ dalfox_check(){
 }
 
 secret_check(){
+    local temp=$(pwd)/temp.tmp
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
-    katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
+    katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $temp 
+    sort -u $temp > $statics
+    echo "" > $temp
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -ivf clear-list.clean  >>  $link
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:"  >>  $temp
     done
+    sort -u $temp | grep -ivf clear-list.txt > $link
+    echo "" > $temp
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     
     if [[ -s $statics ]]; then
-        mkdir $(pwd)/findings;
+        mkdir $(pwd)/findings
         c=1
         for i in $(cat $statics);do  
             secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $(pwd)/findings/$c.txt
             ((c=c+1))
         done
-        echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$findings${NC}"
+	cat  $(pwd)/findings/* >> $temp
+ 	sort -u $temp > $findings
+        echo -e "${GREEN}[+] Secret findings completed. Results saved in the directory ${NC}${CYAN}$(pwd)/findings/${NC} unique result saved in: ${NC}${CYAN}$findings${NC}"
     else
         echo -e "${YELLOW}[-] Statics not found. SecretFinder skipped${NC}"
     fi
+    rm $temp
     echo -e "${YELLOW}[-] Start secrets finding with nuclei ${NC}"
     nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
