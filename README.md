@@ -4,9 +4,10 @@ This script is a wrapper to do an initial recon given an IP or CIDR
 WORK IN PROGRESS
 
 # Usage
-./gather.sh -i IP/CIDR || -d file_with_domain [-a]
+./gather.sh -i IP/CIDR || -d file_with_domain [-a] [-s]
 
-The script performs passive reconnaissance but you can also perform active checks with the -a flag
+The script performs passive reconnaissance from an IP/CIDR (-i) or a list of domains(-d) but you can also perform active checks with the -a flag.
+The subdomain enumeration isn't enable use -s for enable it
 
 The output in save in current directory
 
