@@ -289,7 +289,7 @@ secret_check(){
     if [[ -s $statics ]]; then
         mkdir $(pwd)/findings;
         c=1
-        for i in $($statics);do  
+        for i in $(cat $statics);do  
             secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $(pwd)/findings/$c.txt
             ((c=c+1))
         done
