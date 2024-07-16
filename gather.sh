@@ -282,7 +282,7 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding${NC}"
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $statics
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -ivf clear-list.clean | >>  $link
+        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -ivf clear-list.clean  >>  $link
     done
     # https://raw.githubusercontent.com/m4ll0k/SecretFinder/2c97c1607546c1f5618e829679182261f571a126/SecretFinder.py for  issue with -e flag
     
