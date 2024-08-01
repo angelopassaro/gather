@@ -1,5 +1,3 @@
-
-
 go install -v github.com/projectdiscovery/nuclei/v3/cmd/nuclei@latest
 sudo mv ~/go/bin/nuclei /usr/local/bin/
 go install github.com/projectdiscovery/katana/cmd/katana@latest
