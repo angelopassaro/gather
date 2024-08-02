@@ -225,7 +225,7 @@ search_subdomain() {
     local tmp="$(pwd)/tmp.txt" 
     
     echo -e "${YELLOW}[-] Start finding subdomains${NC}"
-    #cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
+    cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
     cat $dns_result | assetfinder --subs-only | grep -v "[INF]"  > $sub1 2>> $log &
     findomain -q -f $dns_result > $sub2 2>> $log &
     subfinder -dL $dns_result -silent -all -nc > $sub3 2>> $log &
