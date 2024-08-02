@@ -1449,3 +1449,7 @@ bundle.js
 fonts.googleapis.com
 jquery.js
 www.w3.org
+video/avi
+video/divx
+video/ogv
+video/x-matroska
