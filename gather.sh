@@ -57,6 +57,7 @@ link=$(pwd)/link.txt
 mapping=$(pwd)/mapping.txt
 domains=$(pwd)/domains.txt
 s_flag=false
+m_flag=false
 
 
 usage() {
@@ -373,7 +374,9 @@ active() {
     nuclei_check
     dalfox_check
     dir_search
-    mapper
+    if [[ "$m_flag" = true ]]; then
+    	mapper
+    fi
     echo -e "${GREEN}[+] Active scans completed${NC}"
 }
 
@@ -392,7 +395,7 @@ domain() {
 
 
 
-while getopts ":i:d:as" options; do
+while getopts ":i:d:asm" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
@@ -406,6 +409,9 @@ while getopts ":i:d:as" options; do
     s)
         s_flag=true
         ;;
+    m)
+    	m_flag=true
+    	;;
     :)
         echo -e "${GREEN}[!] Error: Option -$OPTARG requires an argument.${NC}" >&2
         exit_abnormal
