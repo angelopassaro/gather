@@ -12,8 +12,11 @@ go install github.com/tomnomnom/assetfinder@latest
 sudo mv ~/go/bin/assetfinder /usr/local/bin/
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 sudo mv ~/go/bin/subfinder /usr/local/bin/
+go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
+sudo mv ~/go/bin/interactsh-client /usr/local/bin/
 go install github.com/sensepost/gowitness@latest
 sudo mv ~/go/bin/gowitness /usr/local/bin/
+
 
 
 curl -LO https://github.com/findomain/findomain/releases/latest/download/findomain-linux.zip
