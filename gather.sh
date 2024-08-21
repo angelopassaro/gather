@@ -30,8 +30,8 @@ echo -e "${CYAN}                                                                
 #secretfinder_path
 #gowitness_path
 #linkfinder_path
-#misconfig-mapper _path
-
+#misconfig-mapper_path
+#intercatsh-client_path
 
 
 dns_result=$(pwd)/dns_ptr.txt  # domain retrived from IP
@@ -43,8 +43,9 @@ subdomains=$(pwd)/subdomains.txt # list of valif subdomain
 nuclei_vuln=$(pwd)/nuclei_vuln.txt
 technologies=$(pwd)/technologies.txt
 cves=$(pwd)/cves.txt
-targets_url=$(pwd)/target_url.txt # url with param
+targets_url=$(pwd)/targets_url.txt # urls with param
 dalfox_out=$(pwd)/dalfox.txt
+dalfox_blind_out=$(pwd)/dalfox_blind.txt
 statics=$(pwd)/statics.txt
 findings=$(pwd)/findings.html
 nuclei_findings=$(pwd)/nuclei_findings.txt
@@ -56,8 +57,11 @@ dalfox_log=$(pwd)/dalfox.log
 link=$(pwd)/link.txt
 mapping=$(pwd)/mapping.txt
 domains=$(pwd)/domains.txt
-s_flag=false
-m_flag=false
+interact_session=$(pwd)/interact_session.txt
+interact_output=$(pwd)/interact_output.txt
+s_flag=false # flag for search subdomains
+m_flag=false # flag for use mapper
+b_flag=false # flag for blind XSS
 
 
 usage() {
@@ -274,6 +278,20 @@ dalfox_check(){
         echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
         dalfox file $targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
+
+        # ############################### TEST BLIND XSS ############################### #
+        if [[ "$b_flag" = true ]]; then
+            echo -e "${YELLOW}[-] Start XSS Blind check with Dalfox${NC}"
+            interactsh-client -v -sf $interact_session > $interact_output 2>&1 &
+            sleep 10
+            local remote=$(cat $interact_output| sed -r 's/\x1B\[[0-9;]*[mK]//g' | grep "\[INF\]" | awk 'NR==3' | cut -d " "  -f 2)
+            echo $remote
+            remote="http://$remote"
+            echo $remote  
+            dalfox file $targets_url --waf-evasion -b $remote > $dalfox_blind_out 2>> $dalfox_log
+            echo -e "${GREEN}[+] XSS Blind completed. Results saved in:${NC}${CYAN}$dalfox_blind${NC}"
+        fi
+        # ############################### TEST BLIND XSS ############################### #
     else
         echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
     fi
@@ -377,6 +395,7 @@ active() {
     if [[ "$m_flag" = true ]]; then
     	mapper
     fi
+    killall interactsh-client 2>/dev/null   # kill running interactsh at the end of full scan
     echo -e "${GREEN}[+] Active scans completed${NC}"
 }
 
@@ -395,7 +414,7 @@ domain() {
 
 
 
-while getopts ":i:d:asm" options; do
+while getopts ":i:d:asmb" options; do
   case "${options}" in
     i)
         ip=${OPTARG}
@@ -411,6 +430,9 @@ while getopts ":i:d:asm" options; do
         ;;
     m)
     	m_flag=true
+    	;;
+    b)
+    	b_flag=true
     	;;
     :)
         echo -e "${GREEN}[!] Error: Option -$OPTARG requires an argument.${NC}" >&2
