@@ -779,6 +779,7 @@ application/atomsvc+xml
 application/atom+xml
 application/pkix-attr-cert
 audio/x-aiff
+multipart/form-data
 video/x-msvideo
 application/vnd.audiograph
 image/vnd.dxf
@@ -798,6 +799,8 @@ application/x-bzip
 application/x-bzip2
 application/x-csh
 text/x-c
+image/ico
+/images/icons/favicon.ico
 application/vnd.chemdraw+xml
 text/css
 chemical/x-cdx
