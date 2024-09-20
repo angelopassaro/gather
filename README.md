@@ -10,11 +10,16 @@ The script performs passive reconnaissance from an IP/CIDR (-i) or a list of dom
 The subdomain enumeration isn't enable use -s for enable it
 Type of target (either one):
 -i IP/CIDR
+
 -d list of domain
+
 Flag:
 -a active scan
+
 -s enable subdomain enumeration for -d target
+
 -m enable misconfig-mapper
+
 -b enable Blind XSS check  with Dalfox
 
 
