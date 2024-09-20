@@ -9,11 +9,13 @@ WORK IN PROGRESS
 The script performs passive reconnaissance from an IP/CIDR (-i) or a list of domains(-d) but you can also perform active checks with the -a flag.
 The subdomain enumeration isn't enable use -s for enable it
 Type of target (either one):
+
 -i IP/CIDR
 
 -d list of domain
 
 Flag:
+
 -a active scan
 
 -s enable subdomain enumeration for -d target
