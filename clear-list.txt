@@ -817,6 +817,7 @@ application/cdmi-object
 application/cdmi-queue
 application/vnd.cluetrust.cartomobile-config
 application/vnd.cluetrust.cartomobile-config-pkg
+application/x-eskerplus
 image/x-cmu-raster
 model/vnd.collada+xml
 text/csv
