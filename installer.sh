@@ -36,7 +36,7 @@ cd -
 sudo git clone https://github.com/maurosoria/dirsearch.git --depth 1 /opt/dirsearch
 cd /opt/dirsearch
 sudo python3 -m pip install -r requirements.txt
-ln -s /opt/dirsearch/dirsearch.py /usr/local/bin/dirsearch
+sudo ln -s /opt/dirsearch/dirsearch.py /usr/local/bin/dirsearch
 cd -
 
 
