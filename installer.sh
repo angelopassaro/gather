@@ -23,7 +23,7 @@ curl -LO https://github.com/findomain/findomain/releases/latest/download/findoma
 unzip findomain-linux.zip
 chmod +x findomain
 sudo mv findomain /usr/local/bin/findomain
-rm findomain-linux.zip
+sudo rm findomain-linux.zip
 
 
 sudo git clone https://github.com/devanshbatham/paramspider /opt/paramspider
@@ -40,12 +40,12 @@ sudo ln -s /opt/dirsearch/dirsearch.py /usr/local/bin/dirsearch
 cd -
 
 
-git clone https://github.com/m4ll0k/SecretFinder.git secretfinder
+sudo git clone https://github.com/m4ll0k/SecretFinder.git secretfinder
 cd secretfinder
 python3 -m pip install -r requirements.txt
 sudo mv SecretFinder.py /usr/local/bin/secretfinder
 cd -
-rm -rf secretfinder
+sudo rm -rf secretfinder
 
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/credentials-disclosure-all.yaml
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/some-PIIs.yaml
