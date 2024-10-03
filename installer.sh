@@ -49,6 +49,7 @@ sudo rm -rf secretfinder
 
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/credentials-disclosure-all.yaml
 wget https://raw.githubusercontent.com/w9w/JSA/main/templates/some-PIIs.yaml
+nuclei -silent
 mkdir ~/nuclei-templates/JSA
 mv some-PIIs.yaml ~/nuclei-templates/JSA/
 mv credentials-disclosure-all.yaml ~/nuclei-templates/JSA/
