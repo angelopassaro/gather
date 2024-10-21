@@ -348,15 +348,16 @@ dir_search() {
 
 screenshot() {
     echo -e "${YELLOW}[-] Take screenshots ${NC}"
-    if [ -n "$domain" ]; then
-        gowitness file -f $targets -F --disable-logging 2>$log
-    elif [ -n "$ip" ]; then
+    #if [ -n "$domain" ]; then
+    #    gowitness file -f $live_target -F --disable-logging 2>$log
+    if [ -n "$ip" ]; then
         gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>>$log
     else
         gowitness file -f $live_target -F --disable-logging 2>>$log
     fi
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW} for check the report${NC}"
 }
+
 
 mapper() {
     echo -e "${YELLOW}[-] Mapping vulnerabilities ${NC}"
