@@ -327,7 +327,11 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding with nuclei ${NC}"
     nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
-    nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
+    if [ -n "$domain" ];then
+        nuclei -t JSA -l $live_target --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
+    else	
+        nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
+    fi
     echo -e "${GREEN}[+] Secret findings completed. Results saved in:${NC}${CYAN}$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$link${NC}"
 }
 
