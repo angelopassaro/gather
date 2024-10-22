@@ -237,7 +237,7 @@ search_subdomain() {
 
     wait
     echo -e "${YELLOW}[-] Merge of subdomains${NC}"
-    cat $sub1 $sub2 $sub3 > $tmp
+    cat $sub1 $sub2 $sub3 |alterx --silent -en > $tmp
 
     sort -u $tmp > $subdomains
     rm $tmp $(pwd)/subdomains-*
