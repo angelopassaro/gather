@@ -47,7 +47,7 @@ targets_url=$(pwd)/targets_url.txt # urls with param
 dalfox_out=$(pwd)/dalfox.txt
 dalfox_blind_out=$(pwd)/dalfox_blind.txt
 statics=$(pwd)/statics.txt
-findings=$(pwd)/findings.html
+findings=$(pwd)/findings
 nuclei_findings=$(pwd)/nuclei_findings.txt
 nuclei_headers=$(pwd)/nuclei_missing_headers.txt
 dirsearch=$(pwd)/dirsearch.txt
@@ -327,7 +327,7 @@ secret_check(){
     echo -e "${YELLOW}[-] Start secrets finding with nuclei ${NC}"
     nuclei -t javascript/enumeration -l $live_target --silent > $nuclei_findings
     #https://github.com/w9w/JSA/tree/main/templates
-    if [ -n "$domain" ];then
+    if [[ -n "$domain" ]];then
         nuclei -t JSA -l $live_target --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
     else	
         nuclei -t JSA -l $targets --silent | grep "PII" | grep -v "\"\""  >> $nuclei_findings
