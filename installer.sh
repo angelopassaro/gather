@@ -41,6 +41,12 @@ sudo python3 -m pip install -r requirements.txt
 sudo ln -s /opt/dirsearch/dirsearch.py /usr/local/bin/dirsearch
 cd -
 
+sudo git clone https://github.com/GerbenJavado/LinkFinder.git /opt/LinkFinder
+cd /opt/LinkFinder
+python3 -m pip install -r requirements.txt
+cd -
+sudo rm /opt/LinkFinder
+
 
 sudo git clone https://github.com/m4ll0k/SecretFinder.git secretfinder
 cd secretfinder
