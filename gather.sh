@@ -304,7 +304,7 @@ secret_check(){
     sort -u $temp > $statics
     echo "" > $temp
     for i in $(cat $katana_result );do
-        linkfinder -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:"  >>  $temp
+        python3 /opt/linkfinder.py -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:"  >>  $temp
     done
     sort -u $temp | grep -ivf clear-list.txt > $link
     echo "" > $temp
@@ -353,13 +353,13 @@ dir_search() {
 screenshot() {
     echo -e "${YELLOW}[-] Take screenshots ${NC}"
     #if [ -n "$domain" ]; then
-    #    gowitness file -f $live_target -F --disable-logging 2>$log
+    #    gowitness file -f $live_target --screenshot-fullpage -q 2>$log
     if [ -n "$ip" ]; then
-        gowitness nmap -f nmap/all.xml --open --service-contains http -F --disable-logging -N 2>>$log
+        gowitness scan nmap -f nmap/all.xml -o --service-contains http --screenshot-fullpage -q 2>>$log
     else
-        gowitness file -f $live_target -F --disable-logging 2>>$log
+        gowitness file -f $live_target -F -q 2>>$log
     fi
-    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness server${NC}${YELLOW} for check the report${NC}"
+    echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness report server${NC}${YELLOW} for check the report${NC}"
 }
 
 
@@ -381,7 +381,7 @@ passive() {
     nmap_check
     dns_enum
     search_subdomain
-    statics_enum
+    # statics_enum
     #if [ ! -s $target ]; then
     #    echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
     #    exit 0
@@ -396,7 +396,7 @@ active() {
     retrive_params
     nuclei_check
     dalfox_check
-    dir_search
+    # dir_search
     if [[ "$m_flag" = true ]]; then
     	mapper
     fi
