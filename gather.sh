@@ -357,7 +357,7 @@ screenshot() {
     if [ -n "$ip" ]; then
         gowitness scan nmap -f nmap/all.xml -o --service-contains http --screenshot-fullpage -q 2>>$log
     else
-        gowitness file -f $live_target -F -q 2>>$log
+        gowitness file -f $live_target --screenshot-fullpage -q 2>>$log
     fi
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness report server${NC}${YELLOW} for check the report${NC}"
 }
@@ -381,7 +381,7 @@ passive() {
     nmap_check
     dns_enum
     search_subdomain
-    # statics_enum
+    statics_enum
     #if [ ! -s $target ]; then
     #    echo -e "${GREEN}[+] DNS enumeration completed.${NC}${RED}0 Target. Quitting.${NC}"
     #    exit 0
@@ -396,7 +396,7 @@ active() {
     retrive_params
     nuclei_check
     dalfox_check
-    # dir_search
+    dir_search
     if [[ "$m_flag" = true ]]; then
     	mapper
     fi
