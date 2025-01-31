@@ -18,6 +18,8 @@ go install github.com/projectdiscovery/alterx/cmd/alterx@latest
 sudo mv ~/go/bin/alterx /usr/local/bin/
 go install github.com/sensepost/gowitness@latest
 sudo mv ~/go/bin/gowitness /usr/local/bin/
+go install -v github.com/projectdiscovery/urlfinder/cmd/urlfinder@latest
+sudo mv ~/go/bin/urlfinder /usr/local/bin/
 
 
 
