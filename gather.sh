@@ -211,7 +211,7 @@ dns_enum() {
 statics_enum() {
     echo -e "${YELLOW}[-] Start statics enumeration with Katana${NC}"
     katana -silent -list $live_target  -d 5 -jc -kf all -fx -xhr -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $katana_result 2>> $log
-    urlfinder -silent -list $live_target >> $katana_result 2>> $log
+    urlfinder -silent -dL $live_target >> $katana_result 2>> $log
     echo -e "${GREEN}[+] Statics enumeration completed. Result saved in:${NC} ${CYAN} $katana_result${NC}"
     #echo -e "${YELLOW}[-] Recovering domains${NC}"
     #for url in $(cat $katana_result); do
