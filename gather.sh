@@ -59,6 +59,9 @@ mapping=$(pwd)/mapping.txt
 domains=$(pwd)/domains.txt
 interact_session=$(pwd)/interact_session.txt
 interact_output=$(pwd)/interact_output.txt
+response=$(pwd)/responses
+js=$(pwd)/js
+
 s_flag=false # flag for search subdomains
 m_flag=false # flag for use mapper
 b_flag=false # flag for blind XSS
@@ -182,7 +185,7 @@ check_scope() {
         sort -u $targets > $temp && mv $temp $targets
     fi
 
-    httpx -l $targets --silent > $live_target 
+    httpx -l $targets --silent  -sr -srd $response > $live_target 
     echo -e "${GREEN}[+] Scope checked${NC}"
 }
 
@@ -304,6 +307,7 @@ secret_check(){
     katana  -list $katana_result --silent -em js -d 5 -fx -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $temp 
     sort -u $temp > $statics
     echo "" > $temp
+    #httpx -l $statics --silent  -sr -srd $js
     for i in $(cat $katana_result );do
         python3 /opt/linkfinder.py -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:"  >>  $temp
     done
@@ -342,7 +346,7 @@ dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
     	if [[ "$s_flag" = false ]]; then
-       		httpx -l $targets --silent > $live_target
+       		httpx -l $targets --silent -sr -srd $response > $live_target
     	fi
         dirsearch -l $live_target  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
     else
@@ -358,7 +362,7 @@ screenshot() {
     if [ -n "$ip" ]; then
         gowitness scan nmap -f nmap/all.xml -o --service-contains http --screenshot-fullpage -q 2>>$log
     else
-        gowitness file -f $live_target --screenshot-fullpage -q 2>>$log
+        gowitness scan file -f $live_target --screenshot-fullpage -q 2>>$log
     fi
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$(pwd)${NC}\n${YELLOW}Run ${CYAN}gowitness report server${NC}${YELLOW} for check the report${NC}"
 }
@@ -411,7 +415,7 @@ domain() {
     if [[ "$s_flag" = true ]]; then
        search_subdomain
     else
-        httpx -l "$domain" --silent > $live_target 
+        httpx -l "$domain" --silent -sr -srd $response > $live_target 
     fi
     statics_enum
     screenshot
