@@ -31,7 +31,7 @@ sudo rm findomain-linux.zip
 
 pipx ensurepath 
 
-pipx install git+https://github.com/devanshbatham/paramspider 
+pipx install git+https://github.com/devanshbatham/ParamSpider.git
 pipx install git+https://github.com/maurosoria/dirsearch.git 
 pipx install git+https://github.com/GerbenJavado/LinkFinder.git --include-deps   
 pipx install git+https://github.com/angelopassaro/SecretFinder
