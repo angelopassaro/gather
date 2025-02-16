@@ -90,29 +90,32 @@ update_variable() {
     live_target=$dir_name/scope/live_target.txt
     domains_tmp=$dir_name/domains.tmp # working file for domain
     subdomains=$dir_name/scope/subdomains.txt # list of valif subdomain
-    nuclei_vuln=$dir_name/nuclei_vuln.txt
-    technologies=$dir_name/technologies.txt
-    cves=$dir_name/cves.txt
-    targets_url=$dir_name/targets_url.txt # urls with param
-    dalfox_out=$dir_name/dalfox.txt
-    dalfox_blind_out=$dir_name/dalfox_blind.txt
+    nuclei_vuln=nuclei_vuln.txt
+    technologies=technologies.txt
+    cves=cves.txt
+    targets_url=targets_url.txt # urls with param
+    dalfox_out=dalfox.txt
+    dalfox_blind_out=dalfox_blind.txt
     statics=statics.txt
     findings=findings.txt
     nuclei_findings=nuclei_findings.txt
-    nuclei_headers=$dir_name/nuclei_missing_headers.txt
-    dirsearch=$dir_name/dirsearch.txt
-    takeover=$dir_name/takeover.txt
-    dalfox_log=$dir_name/dalfox.log
+    nuclei_headers=nuclei_missing_headers.txt
+    dirsearch=dirsearch.txt
+    takeover=takeover.txt
+    dalfox_log=dalfox.log
     link=link.txt
     mapping=$dir_name/mapping.txt
     domains=$dir_name/domains.txt
-    interact_session=$dir_name/interact_session.txt
-    interact_output=$dir_name/interact_output.txt
+    interact_session=interact_session.txt
+    interact_output=interact_output.txt
     response=$dir_name
     js=$dir_name/js
     log=$dir_name/log.log
     dns_result=$dir_name/scope/dns_ptr.txt  # domain retrived from IP
     scans=$dir_name/scans
+    scope=$dir_name/scope
+    nmap=$dir_name/namp
+
 }
 
 check_input_type() {
@@ -253,8 +256,8 @@ statics_enum() {
 
 
     for url in $(cat $live_target); do
-        local result_katana="$dir_name/scans/${url#*//}/$katana_result" 
-        mkdir "$dir_name/scans/${url#*//}"
+        local result_katana="$scans/${url#*//}/$katana_result" 
+        mkdir "$scans/${url#*//}"
         katana -silent -u $url  -d 5 -jc -kf all -fx -xhr -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg > $result_katana 2>> $log
         urlfinder -silent -d $url >> $result_katana 2>> $log
     done
@@ -287,53 +290,81 @@ search_subdomain() {
 
 
 retrive_params(){
-    local temp=$(pwd)/temp.tmp
-    echo -e "${YELLOW}[-] Start parameters discover${NC}"
-    katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $live_target -fx > $targets_url
-    paramspider -l $live_target   1>/dev/null 2>> $log 
-    if [ -s "$(pwd)/results/" ]; then
-        if [ "$(ls -A $(pwd)/results/)" ]; then
-            cat $(pwd)/results/* >> $targets_url
-            rm -rf $(pwd)/results
+    echo -e "${YELLOW}[-] Start parameters discover for live targets${NC}"
+    local results="results"
+    for url in $(cat $live_target);do
+        echo -e "${YELLOW}[-] Start parameters discover for: ${NC}${CYAN}$url${NC}"
+        local temp=$dir_name/temp.tmp
+        local targets_local=$scans/${url#*//}/$targets_url
+
+        katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -u $url -fx > $targets_local
+        paramspider -u $url 1>/dev/null 2>> $log 
+        if [ -s "$dir_name/$results/" ]; then
+            if [ "$(ls -A $dir_name/$results/)" ]; then
+                cat $dir_name/$results/* >> $scans/${url#*//}/$targets_url
+                rm -rf $dir_name/$results
+            fi
         fi
-    fi
-    echo -e "${GREEN}[+] Parameters discover completed. Results saved in:${NC}${CYAN}$targets_url${NC}"
+        echo -e "${YELLOW}[+] Parameters discover completed for ${NC}${CYAN}$url${NC}${YELLOW}.Results saved in:${NC}${CYAN}$scans/${url#*//}/$targets_url${NC}"
+    done
+    echo -e "${GREEN}[+] Parameters discover completed for live targets."${NC}
 }
+        
+
+
+
+ #   local temp=$(pwd)/temp.tmp
+ #   echo -e "${YELLOW}[-] Start parameters discover${NC}"
+ #   katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $live_target -fx > $targets_url
+ #   paramspider -l $live_target   1>/dev/null 2>> $log 
+ #   if [ -s "$(pwd)/results/" ]; then
+ #       if [ "$(ls -A $(pwd)/results/)" ]; then
+ #           cat $(pwd)/results/* >> $targets_url
+ #           rm -rf $(pwd)/results
+ #       fi
+ #   fi
+ #   echo -e "${GREEN}[+] Parameters discover completed. Results saved in:${NC}${CYAN}$targets_url${NC}"
+#}
 
 nuclei_check() {
-    echo -e "${YELLOW}[-] Start enumeration with Nuclei${NC}"
+    echo -e "${YELLOW}[-] Start enumeration with Nuclei for live targets${NC}"
     nuclei --silent -ut >/dev/null
-    nuclei --silent -fr -t technologies -l $live_target  > $technologies
-    nuclei --silent -fr -t cves -l $live_target  > $cves
-    # cat $targets | nuclei -as --silent > $nuclei_vuln # not work
-    nuclei --silent  -dast -list $targets_url > $nuclei_vuln
-    nuclei --silent -fr -id http-missing-security-headers -list $live_target > $nuclei_headers
-    nuclei --silent -fr -t takeovers -list $live_target > $takeover
-    echo -e "${GREEN}[+] Nuclei enumeration completed. Results saved in:${NC}${CYAN}\n$technologies\n$cves\n$nuclei_vuln\n${CYAN}\n$takeover\n$nuclei_headers\n${NC}"
+    for url in $(cat $live_target);do
+        echo -e "${YELLOW}[-] Start enumeration for:${NC}${CYAN}$url${NC}"
+        nuclei --silent -fr -t technologies -u $url  > $scans/${url#*//}/$technologies
+        nuclei --silent -fr -t cves -u $rul  > $scans/${url#*//}/$cves
+        # nuclei --silent  -dast -u $url > $scans/${url#*//}/$nuclei_vuln not work
+        nuclei --silent -fr -id http-missing-security-headers -u $url > $scans/${url#*//}/$nuclei_headers
+        nuclei --silent -fr -t takeovers -u $url > $scans/${url#*//}/$takeover
+        echo -e "${YELLOW}[+] Nuclei enumeration completed for ${CYAN}$url${NC}.${YELLOW}Results saved in:${NC}${CYAN}\n$scans/${url#*//}/$technologies\n$scans/${url#*//}/$cves\n$scans/${url#*//}/$nuclei_vuln\n${CYAN}\n$scans/${url#*//}/$takeover\n$scans/${url#*//}/$nuclei_headers\n${NC}"
+    done
+    echo -e "${GREEN}[+] Nuclei enumeration completed.${NC}"
 }
 
 dalfox_check(){
-    if [[ -s $targets_url ]]; then
-        echo -e "${YELLOW}[-] Start XSS check with Dalfox${NC}"
-        dalfox file $targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $dalfox_out 2> $dalfox_log
+    echo -e "${YELLOW}[-] Start XSS check with Dalfox for valid url${NC}"
+    for target in $(ls $scans);do
+        if [[ -s $scans/$target/$targets_url ]]; then
+        echo -e "${YELLOW}[-] Start XSS check with Dalfox for${NC}${CYAN}$target${NC}"
+        dalfox file $scans/$target/$targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $scans/$target/$dalfox_out 2> $scans/$target/$dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
-
-        # ############################### TEST BLIND XSS ############################### #
-        if [[ "$b_flag" = true ]]; then
-            echo -e "${YELLOW}[-] Start XSS Blind check with Dalfox${NC}"
-            interactsh-client -v -sf $interact_session > $interact_output 2>&1 &
-            sleep 10
-            local remote=$(cat $interact_output| sed -r 's/\x1B\[[0-9;]*[mK]//g' | grep "\[INF\]" | awk 'NR==3' | cut -d " "  -f 2)
-            echo $remote
-            remote="http://$remote"
-            echo $remote  
-            dalfox file $targets_url --waf-evasion -b $remote > $dalfox_blind_out 2>> $dalfox_log
-            echo -e "${GREEN}[+] XSS Blind completed. Results saved in:${NC}${CYAN}$dalfox_blind${NC}"
+            # ############################### TEST BLIND XSS ############################### #
+            if [[ "$b_flag" = true ]]; then
+                echo -e "${YELLOW}[-] Start XSS Blind check with Dalfox for $target${NC}"
+                interactsh-client -v -sf $scans/$target/$interact_session > $scans/$target/$interact_output 2>&1 &
+                sleep 10
+                local remote=$(cat $scans/$target/$interact_output| sed -r 's/\x1B\[[0-9;]*[mK]//g' | grep "\[INF\]" | awk 'NR==3' | cut -d " "  -f 2)
+                echo $remote
+                remote="http://$remote"
+                echo $remote  
+                dalfox file $scans/$target/$targets_url --waf-evasion -b $remote > $dalfox_blind_out 2>> $dalfox_log
+                echo -e "${GREEN}[+] XSS Blind completed. Results saved in:${NC}${CYAN}$scans/$target/$dalfox_blind${NC}"
+            fi
+            # ############################### TEST BLIND XSS ############################### #
+        else
+            echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped for${NC}${CYAN}$url${NC}"
         fi
-        # ############################### TEST BLIND XSS ############################### #
-    else
-        echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped${NC}"
-    fi
+    done
 }
 
 secret_check(){
@@ -346,7 +377,7 @@ secret_check(){
         echo "" > $temp
 
         for i in $(cat $scans/$dir/$katana_result);do
-            python "$(pipx runpip LinkFinder show LinkFinder | awk -F ': ' '/Location/ {print $2 "/linkfinder.py"}')" -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:"  >>  $temp
+            python "$(pipx runpip LinkFinder show LinkFinder | awk -F ': ' '/Location/ {print $2 "/linkfinder.py"}')" -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -v "Usage" >>  $temp 2>>$log
         done
 
         sort -u $temp | grep -ivf clear-list.txt > $scans/$dir/$link
@@ -355,16 +386,20 @@ secret_check(){
         if [[ -s  $scans/$dir/$statics ]]; then
             mkdir $scans/$dir/findings
             c=1
-            for i in $(cat  $scans/$dir/$statics);do  
-                secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $scans/$dir/findings/$c.txt
+            for i in $(cat  $scans/$dir/$statics);do
+                if curl -s $i | grep -q "//# sourceMappingURL=data:application/json;charset=utf-8;base64"; then
+                    echo "${YELLOW}Secretfinder for ${NC}${CYAN}$i${NC}${YELLOW}skipped. The content could block its execution. Manual execution with ${NC}${CYAN}secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $scans/$dir/findings/$c.txt${NC}"
+                else
+                    secretfinder -i $i -g 'jquery;bootstrap;api.google.com' -o cli > $scans/$dir/findings/$c.txt
+                fi
                 ((c=c+1))
             done
 
             cat  $scans/$dir/findings/* >> $temp
             sort -u $temp > $scans/$dir/findings/$findings
-                echo -e "${YELLOW}[+] Secret findings for ${CYAN}$dir${NC}${YELLOW} completed. Results saved in the directory ${NC}${CYAN}$scans/$dir/findings/${NC}${YELLOW}unique result saved in: ${NC}${CYAN}$scans/$dir/findings/$findings${NC}"
+                echo -e "${YELLOW}[+] Secret findings for ${CYAN}$dir${NC}${YELLOW} completed. Results saved in the directory ${NC}${CYAN}$scans/$dir/findings/ ${NC}${YELLOW} unique result saved in: ${NC}${CYAN}$scans/$dir/findings/$findings${NC}"
             else
-                echo -e "${YELLOW}[-] Statics not found for ${CYAN}$dir${NC}.${YELLOW}SecretFinder skipped${NC}"
+                echo -e "${YELLOW}[-] Statics not found for ${CYAN}$dir${NC}${YELLOW} SecretFinder skipped${NC}"
             fi
         rm $temp
         echo -e "${YELLOW}[-] Start secrets finding with nuclei for ${CYAN}$dir${NC}"
@@ -375,7 +410,7 @@ secret_check(){
         else	
             nuclei -t JSA -u $dir --silent | grep "PII" | grep -v "\"\""  >> $scans/$dir/$nuclei_findings
         fi
-        echo -e "${GREEN}[+] Secret findings completed for ${CYAN}$dir${NC}. Results saved in:${NC}${CYAN}$scans/$dir/$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$scans/$dir/$link${NC}"
+        echo -e "${GREEN}[+] Secret findings completed for ${CYAN}$dir${NC}.${GREEN} Results saved in:${NC}${CYAN}$scans/$dir/$nuclei_findings${NC} ${GREEN}and${NC} ${CYAN}$scans/$dir/$link${NC}"
 
     done
         echo -e "${GREEN}[+] Secret findings for live targets${NC}${YELLOW}completed${NC}"
@@ -388,13 +423,17 @@ dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
     	if [[ "$s_flag" = false ]]; then
-       		httpx -l $targets --silent -sr -srd $response > $live_target
+       		httpx -l $scope/$targets --silent -sr -srd $response > $scope/$live_target
     	fi
-        dirsearch -l $live_target  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+        for url in $($live_target);do
+            dirsearch -u $url  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/${url#*//}/$dirsearch 1>/dev/null 2>/dev/null
+            echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$$scans/${url#*//}/$dirsearch${NC}"
+        done
     else
-        dirsearch --nmap-report nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $dirsearch 1>/dev/null 2>/dev/null
+        dirsearch --nmap-report $nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/$dirsearch 1>/dev/null 2>/dev/null
+        echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$scope/$dirsearch${NC}"
     fi
-    echo -e "${GREEN}[+] Directory enumeration completed. Results saved in:${NC}${CYAN}$dirsearch${NC}"
+    echo -e "${GREEN}[+] Directory enumeration completed."
 }
 
 screenshot() {
@@ -425,21 +464,21 @@ passive() {
     check_input_type $ip >/dev/null
     echo -e "${GREEN}[+] Working for the IP/CIDR:${NC} ${CYAN}$ip${NC}"
     echo -e "${GREEN}[+] The output will be saved in the directory:${NC}${CYAN} $dir_name${NC}"
-    nmap_check
-    dns_enum    
-    search_subdomain
-    statics_enum
-    screenshot
-    secret_check
-    echo -e "${GREEN}[+]Passive scans completed${NC}"
+    #nmap_check
+    #dns_enum    
+    #search_subdomain
+    #statics_enum
+    #screenshot
+    #secret_check
+    #echo -e "${GREEN}[+]Passive scans completed${NC}"
 }
 
 
 active() {
     retrive_params
     nuclei_check
-    dalfox_check
-    dir_search
+    #dalfox_check
+    #dir_search
     if [[ "$m_flag" = true ]]; then
     	mapper
     fi
