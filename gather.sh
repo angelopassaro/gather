@@ -425,7 +425,7 @@ dir_search() {
     	if [[ "$s_flag" = false ]]; then
        		httpx -l $scope/$targets --silent -sr -srd $response > $scope/$live_target
     	fi
-        for url in $($live_target);do
+        for url in $($scope/$live_target);do
             dirsearch -u $url  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/${url#*//}/$dirsearch 1>/dev/null 2>/dev/null
             echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$$scans/${url#*//}/$dirsearch${NC}"
         done
@@ -464,21 +464,21 @@ passive() {
     check_input_type $ip >/dev/null
     echo -e "${GREEN}[+] Working for the IP/CIDR:${NC} ${CYAN}$ip${NC}"
     echo -e "${GREEN}[+] The output will be saved in the directory:${NC}${CYAN} $dir_name${NC}"
-    #nmap_check
-    #dns_enum    
-    #search_subdomain
-    #statics_enum
-    #screenshot
-    #secret_check
-    #echo -e "${GREEN}[+]Passive scans completed${NC}"
+    nmap_check
+    dns_enum    
+    search_subdomain
+    statics_enum
+    screenshot
+    secret_check
+    echo -e "${GREEN}[+]Passive scans completed${NC}"
 }
 
 
 active() {
     retrive_params
     nuclei_check
-    #dalfox_check
-    #dir_search
+    dalfox_check
+    dir_search
     if [[ "$m_flag" = true ]]; then
     	mapper
     fi
