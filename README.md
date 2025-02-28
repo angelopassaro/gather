@@ -61,6 +61,7 @@ The output in save in current directory
 
 # Directory tree
 
+```
 Target
 ├── log.log
 ├── nmap
@@ -106,3 +107,4 @@ Target
 └── screenshot
     ├── gowitness.sqlite3 
 
+```
