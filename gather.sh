@@ -446,6 +446,8 @@ screenshot() {
         gowitness scan nmap -f $dir_name/nmap/all.xml -o --write-db --screenshot-fullpage -s $dir_name/screenshot -q 2>>$log
     fi
         gowitness scan file -f $live_target --screenshot-fullpage --write-db $dir_name/screenshot -q 2>>$log
+   
+    mv  gowitness.sqlite3 $dir_name/screenshot/
     
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$dir_name/screenshot${NC}\n${YELLOW}Run ${CYAN}gowitness report server${NC}${YELLOW} for check the report${NC}"
 }
