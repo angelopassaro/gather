@@ -442,10 +442,11 @@ screenshot() {
     echo -e "${YELLOW}[-] Take screenshots ${NC}"
     #if [ -n "$domain" ]; then
     #    gowitness file -f $live_target --screenshot-fullpage -q 2>$log
+    mkdir $dir_name/screenshot
     if [ -n "$ip" ]; then
-        gowitness scan nmap -f $dir_name/nmap/all.xml -o --write-db --screenshot-fullpage -s $dir_name/screenshot -q 2>>$log
+        gowitness scan nmap -f $dir_name/nmap/all.xml -o --screenshot-fullpage --write-db -q 2>>$log
     fi
-        gowitness scan file -f $live_target --screenshot-fullpage --write-db $dir_name/screenshot -q 2>>$log
+        gowitness scan file -f $live_target --screenshot-fullpage --write-db  -q 2>>$log
    
     mv  gowitness.sqlite3 $dir_name/screenshot/
     
