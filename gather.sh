@@ -34,7 +34,7 @@ echo -e "${CYAN}                                                                
 #intercatsh-client_path
 
 
-katana_result="katana_result.txt" # katana static finding
+katana_result="" # katana static finding
 targets="" # working file
 live_target=""
 domains_tmp="" # working file for domain
@@ -85,7 +85,7 @@ update_variable() {
     mkdir "$dir_name/scans/"
     mkdir "$dir_name/nmap/"
 
-
+    katana_result="katana_result.txt" # katana static finding
     targets=$dir_name/scope/target.txt # working file
     live_target=$dir_name/scope/live_target.txt
     domains_tmp=$dir_name/domains.tmp # working file for domain
@@ -114,7 +114,7 @@ update_variable() {
     dns_result=$dir_name/scope/dns_ptr.txt  # domain retrived from IP
     scans=$dir_name/scans
     scope=$dir_name/scope
-    nmap=$dir_name/namp
+    nmap=$dir_name/nmap
 
 }
 
@@ -175,7 +175,7 @@ check_scope() {
     
      echo -e "${YELLOW}[-] Checking the scope${NC}"
      if [ -n "$ip" ]; then
-         sort -u $1 | dnsx -silent -a -resp -nc > $result_tmp
+         sort -u $1 | httpx -silent | dnsx -silent -a -resp -nc > $result_tmp
 
          input_type=$(check_input_type "$ip")
          case $input_type in
@@ -226,7 +226,7 @@ check_scope() {
         sort -u "$targets" > "$temp" &&  mv "$temp" "$targets"
     fi
 
-    httpx -l $targets --silent  -sr -srd $response > $live_target 
+    httpx -l $targets --silent  -sr -srd $response > $live_target 2>> $log
     echo -e "${GREEN}[+] Scope checked${NC}"
 }
 
@@ -235,7 +235,8 @@ check_scope() {
 nmap_check(){
     local nmap_result=$dir_name/nmap/all
     echo -e "${YELLOW}[-] Start NMAP enumeration${NC}"
-    nmap -sC -sV $ip  -oA $nmap_result | grep -o 'DNS:[^,]*' | awk -F: '{print $2}'  | sort | uniq > $dns_result
+    nmap -sC -sV $ip -oA $nmap_result 1>>/dev/null 2>>$log
+    cat $nmap/all.nmap | grep -o 'DNS:[^,]*' | awk -F: '{print $2}'  | sort | uniq > $dns_result
     echo -e "${GREEN}[+] NMAP enumeration completed. Result saved in:${NC} ${CYAN}$nmap_result${NC}"
 }
 
@@ -265,24 +266,25 @@ statics_enum() {
 }
 
 
-search_subdomain() {
-    local sub1="$dir_name/subdomains-1.txt"
-    local sub2="$dir_name/subdomains-2.txt" 
-    local sub3="$dir_name/subdomains-3.txt" 
-    local tmp="$dir_name/tmp.txt" 
+ search_subdomain() {
+     local sub1="$dir_name/subdomains-1.txt"
+     local sub2="$dir_name/subdomains-2.txt" 
+     local sub3="$dir_name/subdomains-3.txt" 
+     local tmp="$dir_name/tmp.txt" 
     
-    echo -e "${YELLOW}[-] Start finding subdomains${NC}"
-    cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
-    cat $dns_result | assetfinder --subs-only | grep -v "[INF]"  > $sub1 2>> $log &
-    findomain -q -f $dns_result > $sub2 2>> $log &
-    subfinder -dL $dns_result -silent -all -nc > $sub3 2>> $log &
-    wait
+     echo -e "${YELLOW}[-] Start finding subdomains${NC}"
+     cat $dns_result >> $subdomains # need to check the IP for the resolved DNS
+     cat $dns_result | assetfinder --subs-only | grep -v "[INF]"  > $sub1 2>> $log &
+     findomain -q -f $dns_result > $sub2 2>> $log &
+     subfinder -dL $dns_result -silent -all -nc > $sub3 2>> $log &
+     wait
 
-    echo -e "${YELLOW}[-] Merge of subdomains${NC}"
-    cat $sub1 $sub2 $sub3 |alterx --silent -en > $tmp
+     echo -e "${YELLOW}[-] Merge of subdomains${NC}"
+     cat $sub1 $sub2 $sub3 |alterx --silent -en >> $tmp 2>>$log 
 
-    sort -u $tmp > $subdomains
-    rm $tmp $dir_name/subdomains-*
+     sort -u $tmp > $subdomains
+     rm $tmp $dir_name/subdomains-*
+
     check_scope $subdomains
     echo -e "${GREEN}[+] Subdomain enumeration completed. Result saved in:${NC} ${CYAN}$subdomains${NC}"
     echo -e "${GREEN}[+] Valid targets saved in:${NC} ${CYAN}$targets${NC}\n${GREEN}[+] Live targets saved in:${NC}${CYAN}$live_target${NC}"
@@ -345,7 +347,7 @@ dalfox_check(){
     echo -e "${YELLOW}[-] Start XSS check with Dalfox for valid url${NC}"
     for target in $(ls $scans);do
         if [[ -s $scans/$target/$targets_url ]]; then
-        echo -e "${YELLOW}[-] Start XSS check with Dalfox for${NC}${CYAN}$target${NC}"
+        echo -e "${YELLOW}[-] Start XSS check with Dalfox for ${NC}${CYAN}$target${NC}"
         dalfox file $scans/$target/$targets_url --remote-payloads=portswigger,payloadbox --waf-evasion > $scans/$target/$dalfox_out 2> $scans/$target/$dalfox_log
         echo -e "${GREEN}[+] XSS completed. Results saved in:${NC}${CYAN}$dalfox_out${NC}"
             # ############################### TEST BLIND XSS ############################### #
@@ -418,7 +420,6 @@ secret_check(){
 }
 
 
-
 dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
@@ -427,11 +428,12 @@ dir_search() {
     	fi
         for url in $($scope/$live_target);do
             dirsearch -u $url  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/${url#*//}/$dirsearch 1>/dev/null 2>/dev/null
-            echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$$scans/${url#*//}/$dirsearch${NC}"
+            echo -e "${GREEN}[+] Directory enumeration completed for ${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$$scans/${url#*//}/$dirsearch${NC}"
         done
     else
-        dirsearch --nmap-report $nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/$dirsearch 1>/dev/null 2>/dev/null
-        echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$scope/$dirsearch${NC}"
+    #    Nmap parser not work anymore in dirsearch
+        dirsearch --nmap-report $nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scope/$dirsearch 1>/dev/null 2>/dev/null
+        echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}${GREEN}.Results saved in:${NC}${CYAN}$scope/$dirsearch${NC}"
     fi
     echo -e "${GREEN}[+] Directory enumeration completed."
 }
@@ -441,10 +443,10 @@ screenshot() {
     #if [ -n "$domain" ]; then
     #    gowitness file -f $live_target --screenshot-fullpage -q 2>$log
     if [ -n "$ip" ]; then
-        gowitness scan nmap -f $dir_name/nmap/all.xml -o --service-contains http --screenshot-fullpage -s $dir_name/screenshot -q 2>>$log
-    else
-        gowitness scan file -f $live_target --screenshot-fullpage $dir_name/screenshot -q 2>>$log
+        gowitness scan nmap -f $dir_name/nmap/all.xml -o --write-db --screenshot-fullpage -s $dir_name/screenshot -q 2>>$log
     fi
+        gowitness scan file -f $live_target --screenshot-fullpage --write-db $dir_name/screenshot -q 2>>$log
+    
     echo -e "${GREEN}[+] Screenshot taken. Results saved in:${NC}${CYAN}$dir_name/screenshot${NC}\n${YELLOW}Run ${CYAN}gowitness report server${NC}${YELLOW} for check the report${NC}"
 }
 
