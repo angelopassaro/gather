@@ -79,6 +79,12 @@ Target
 │   │   └── domain-target4-headers.txt
 ├── scans
 │   ├── domain-target1
+│   │   ├── findings
+│   │   │   ├── 1.txt
+│   │   │   ├── 2.txt
+│   │   │   ├── 3.txt
+│   │   │   ├── findgs.txt
+│   │   │   
 │   │   ├── katana_result.txt
 │   │   ├── link.txt
 │   │   ├── nuclei_findings.txt
