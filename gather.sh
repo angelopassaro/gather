@@ -300,11 +300,11 @@ retrive_params(){
         local targets_local=$scans/${url#*//}/$targets_url
 
         katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -u "$url" -fx > "$targets_local"
-        paramspider -d "$url" 1>/dev/null 2>> $log 
-        if [ -s "$dir_name/$results/" ]; then
-            if [ "$(ls -A $dir_name/$results/)" ]; then
-                cat $dir_name/$results/* >> $scans/${url#*//}/$targets_url
-                rm -rf $dir_name/$results
+        paramspider -d ${url#*://} 1>/dev/null 2>> $log            
+        if [ -s "$results/" ]; then
+            if [ "$(ls -A $results/)" ]; then
+                cat $results/* >> $scans/${url#*//}/$targets_url
+                rm -rf $results
             fi
         fi
         echo -e "${YELLOW}[+] Parameters discover completed for ${NC}${CYAN}$url${NC}${YELLOW}.Results saved in:${NC}${CYAN}$scans/${url#*//}/$targets_url${NC}"
