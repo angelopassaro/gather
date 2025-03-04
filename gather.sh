@@ -294,13 +294,13 @@ statics_enum() {
 retrive_params(){
     echo -e "${YELLOW}[-] Start parameters discover for live targets${NC}"
     local results="results"
-    for url in $(cat $live_target);do
+    while IFS= read -r url; do
         echo -e "${YELLOW}[-] Start parameters discover for: ${NC}${CYAN}$url${NC}"
         local temp=$dir_name/temp.tmp
         local targets_local=$scans/${url#*//}/$targets_url
 
-        katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -u $url -fx > $targets_local
-        paramspider -d $url 1>/dev/null 2>> $log 
+        katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -u "$url" -fx > "$targets_local"
+        paramspider -d "$url" 1>/dev/null 2>> $log 
         if [ -s "$dir_name/$results/" ]; then
             if [ "$(ls -A $dir_name/$results/)" ]; then
                 cat $dir_name/$results/* >> $scans/${url#*//}/$targets_url
@@ -308,7 +308,7 @@ retrive_params(){
             fi
         fi
         echo -e "${YELLOW}[+] Parameters discover completed for ${NC}${CYAN}$url${NC}${YELLOW}.Results saved in:${NC}${CYAN}$scans/${url#*//}/$targets_url${NC}"
-    done
+    done < "$live_target"
     echo -e "${GREEN}[+] Parameters discover completed for live targets."${NC}
 }
         
@@ -316,15 +316,15 @@ retrive_params(){
 nuclei_check() {
     echo -e "${YELLOW}[-] Start enumeration with Nuclei for live targets${NC}"
     nuclei --silent -ut >/dev/null
-    for url in $(cat $live_target);do
+    while IFS= read -r url; do
         echo -e "${YELLOW}[-] Start enumeration for:${NC}${CYAN}$url${NC}"
-        nuclei --silent -fr -t technologies -u $url  -nc > $scans/${url#*//}/$technologies
-        nuclei --silent -fr -t cves -u $url  -nc > $scans/${url#*//}/$cves
+        nuclei --silent -fr -t technologies -u "$url"  -nc > $scans/${url#*//}/$technologies
+        nuclei --silent -fr -t cves -u "$url"  -nc > $scans/${url#*//}/$cves
         # nuclei --silent  -dast -u $url > $scans/${url#*//}/$nuclei_vuln not work
-        nuclei --silent -fr -id http-missing-security-headers -u $url -nc > $scans/${url#*//}/$nuclei_headers
-        nuclei --silent -fr -t takeovers -u $url -nc > $scans/${url#*//}/$takeover
+        nuclei --silent -fr -id http-missing-security-headers -u "$url" -nc > $scans/${url#*//}/$nuclei_headers
+        nuclei --silent -fr -t takeovers -u "$url" -nc > $scans/${url#*//}/$takeover
         echo -e "${YELLOW}[+] Nuclei enumeration completed for ${CYAN}$url${NC}.${YELLOW}\nResults saved in:${NC}${CYAN}\n$scans/${url#*//}/$technologies\n$scans/${url#*//}/$cves\n$scans/${url#*//}/$nuclei_vuln\n${CYAN}$scans/${url#*//}/$takeover\n$scans/${url#*//}/$nuclei_headers\n${NC}"
-    done
+    done < "$live_target"
     echo -e "${GREEN}[+] Nuclei enumeration completed.${NC}"
 }
 
