@@ -300,7 +300,7 @@ retrive_params(){
         local targets_local=$scans/${url#*//}/$targets_url
 
         katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -u $url -fx > $targets_local
-        paramspider -u $url 1>/dev/null 2>> $log 
+        paramspider -d $url 1>/dev/null 2>> $log 
         if [ -s "$dir_name/$results/" ]; then
             if [ "$(ls -A $dir_name/$results/)" ]; then
                 cat $dir_name/$results/* >> $scans/${url#*//}/$targets_url
@@ -313,32 +313,17 @@ retrive_params(){
 }
         
 
-
-
- #   local temp=$(pwd)/temp.tmp
- #   echo -e "${YELLOW}[-] Start parameters discover${NC}"
- #   katana --silent -f qurl -iqp -ef woff,css,png,svg,jpg,woff2,jpeg,gif,svg -list $live_target -fx > $targets_url
- #   paramspider -l $live_target   1>/dev/null 2>> $log 
- #   if [ -s "$(pwd)/results/" ]; then
- #       if [ "$(ls -A $(pwd)/results/)" ]; then
- #           cat $(pwd)/results/* >> $targets_url
- #           rm -rf $(pwd)/results
- #       fi
- #   fi
- #   echo -e "${GREEN}[+] Parameters discover completed. Results saved in:${NC}${CYAN}$targets_url${NC}"
-#}
-
 nuclei_check() {
     echo -e "${YELLOW}[-] Start enumeration with Nuclei for live targets${NC}"
     nuclei --silent -ut >/dev/null
     for url in $(cat $live_target);do
         echo -e "${YELLOW}[-] Start enumeration for:${NC}${CYAN}$url${NC}"
-        nuclei --silent -fr -t technologies -u $url  > $scans/${url#*//}/$technologies
-        nuclei --silent -fr -t cves -u $rul  > $scans/${url#*//}/$cves
+        nuclei --silent -fr -t technologies -u $url  -nc > $scans/${url#*//}/$technologies
+        nuclei --silent -fr -t cves -u $url  -nc > $scans/${url#*//}/$cves
         # nuclei --silent  -dast -u $url > $scans/${url#*//}/$nuclei_vuln not work
-        nuclei --silent -fr -id http-missing-security-headers -u $url > $scans/${url#*//}/$nuclei_headers
-        nuclei --silent -fr -t takeovers -u $url > $scans/${url#*//}/$takeover
-        echo -e "${YELLOW}[+] Nuclei enumeration completed for ${CYAN}$url${NC}.${YELLOW}Results saved in:${NC}${CYAN}\n$scans/${url#*//}/$technologies\n$scans/${url#*//}/$cves\n$scans/${url#*//}/$nuclei_vuln\n${CYAN}\n$scans/${url#*//}/$takeover\n$scans/${url#*//}/$nuclei_headers\n${NC}"
+        nuclei --silent -fr -id http-missing-security-headers -u $url -nc > $scans/${url#*//}/$nuclei_headers
+        nuclei --silent -fr -t takeovers -u $url -nc > $scans/${url#*//}/$takeover
+        echo -e "${YELLOW}[+] Nuclei enumeration completed for ${CYAN}$url${NC}.${YELLOW}\nResults saved in:${NC}${CYAN}\n$scans/${url#*//}/$technologies\n$scans/${url#*//}/$cves\n$scans/${url#*//}/$nuclei_vuln\n${CYAN}$scans/${url#*//}/$takeover\n$scans/${url#*//}/$nuclei_headers\n${NC}"
     done
     echo -e "${GREEN}[+] Nuclei enumeration completed.${NC}"
 }
@@ -364,7 +349,7 @@ dalfox_check(){
             fi
             # ############################### TEST BLIND XSS ############################### #
         else
-            echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped for${NC}${CYAN}$url${NC}"
+            echo -e "${YELLOW}[-] Not valid urls found. Dalfox check skipped for${NC}${CYAN} $url${NC}"
         fi
     done
 }
@@ -379,7 +364,7 @@ secret_check(){
         echo "" > $temp
 
         for i in $(cat $scans/$dir/$katana_result);do
-            python "$(pipx runpip LinkFinder show LinkFinder | awk -F ': ' '/Location/ {print $2 "/linkfinder.py"}')" -i $i -d -o cli | grep -v "Running against" | grep -v "^$" | grep -v "Invalid input defined or SSL error for:" | grep -v "Usage" >>  $temp 2>>$log
+            python "$(pipx runpip LinkFinder show LinkFinder | awk -F ': ' '/Location/ {print $2 "/linkfinder.py"}')" -i $i -d -o cli | grep -a -v "Running against" | grep -a -v "^$" | grep -a -v "Invalid input defined or SSL error for:" | grep -a -v "Usage" >>  $temp 2>>$log
         done
 
         sort -u $temp | grep -ivf clear-list.txt > $scans/$dir/$link
@@ -424,17 +409,19 @@ dir_search() {
     echo -e "${YELLOW}[-] Start directory enumeration${NC}"
     if [ -n "$domain" ];then
     	if [[ "$s_flag" = false ]]; then
-       		httpx -l $scope/$targets --silent -sr -srd $response > $scope/$live_target
+       		httpx -l $targets --silent -sr -srd $response > $live_target
     	fi
-        for url in $($scope/$live_target);do
-            dirsearch -u $url  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scans/${url#*//}/$dirsearch 1>/dev/null 2>/dev/null
-            echo -e "${GREEN}[+] Directory enumeration completed for ${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$$scans/${url#*//}/$dirsearch${NC}"
-        done
-    else
+    fi  
+
+    while IFS= read -r url; do
+        dirsearch -u "$url" --log "$scans/${url#*//}/dirsearch_log.txt" --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json -O plain -o "$scans/${url#*//}/$dirsearch" 1>/dev/null 2>/dev/null
+        echo -e "${GREEN}[+] Directory enumeration completed for ${NC}${CYAN}$url${NC}.${GREEN}Results saved in:${NC}${CYAN}$scans/${url#*//}/$dirsearch${NC}"
+    done < "$live_target"
+   # else
     #    Nmap parser not work anymore in dirsearch
-        dirsearch --nmap-report $nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json --format plain -o $scope/$dirsearch 1>/dev/null 2>/dev/null
+    #    dirsearch --nmap-report $nmap/all.xml  --crawl -r -q -e conf,config,bak,backup,swp,old,db,sql,asp,aspx,aspx~,asp~,py,py~,rb,rb~,php,php~,bak,bkp,cache,cgi,conf,csv,html,inc,jar,js,json,jsp,jsp~,lock,log,rar,old,sql,sql.gz,sql.zip,sql.tar.gz,sql~,swp,swp~,tar,tar.bz2,tar.gz,txt,wadl,zip,log,xml,js,json -O plain -o $scope/$dirsearch 1>/dev/null 2>/dev/null
         echo -e "${GREEN}[+] Directory enumeration completed for${NC}${CYAN}$url${NC}${GREEN}.Results saved in:${NC}${CYAN}$scope/$dirsearch${NC}"
-    fi
+    #fi
     echo -e "${GREEN}[+] Directory enumeration completed."
 }
 
@@ -475,7 +462,7 @@ passive() {
     statics_enum
     screenshot
     secret_check
-    echo -e "${GREEN}[+]Passive scans completed${NC}"
+    echo -e "${GREEN}[+] Passive scans completed${NC}"
 }
 
 
@@ -548,6 +535,7 @@ else
   fi
 
   if [[ -n "$domain" ]]; then
+    dir_name="${domain%.*}"  
     update_variable
     domain
   fi
