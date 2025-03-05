@@ -80,7 +80,6 @@ exit_abnormal() {
 }
 
 update_variable() {
-    #katana_result=$dir_name/katana_result.txt # katana static finding  TODO REMOVE
     mkdir "$dir_name/scope/"
     mkdir "$dir_name/scans/"
     mkdir "$dir_name/nmap/"

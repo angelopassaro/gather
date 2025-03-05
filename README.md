@@ -62,55 +62,107 @@ The output in save in current directory
 # Directory tree
 
 ```
-Target
+targets
 ├── log.log
 ├── nmap
 │   ├── all.gnmap
 │   ├── all.nmap
 │   └── all.xml
 ├── response
-│   ├── domain-target1
-│   │   └── domain-target1-headers.txt
-│   ├── domain-target2
-│   │   └── domain-target2-headers.txt
-│   ├── domain-target3
-│   │   └── domain-target3-headers.txt
-│   ├── domain-target4
-│   │   └── domain-target4-headers.txt
+│   ├── target1.com
+│   │   └── 6aeb4976af7d04d273fbc268d70edd15a05ac3a4.txt
+│   ├── target2.com
+│   │   └── d47ba415661b5d707c37aaef20b63226d273ab4a.txt
+│   ├── target3.com
+│   │   └── d4057dc19844d8cd0b4d9bb14dce6c979dc32459.txt
+│   ├── target4.com
+│   │   └── 52bc3d1f01061499a1331125f100616a1f665f54.txt
+│   ├── target5.com
+│   │   └── 6e04c1b2ac402d25f098831212b525738428297e.txt
+│   ├── target6.com
+│   │   └── e96d073983bdb0626a3f78903434f37f576c4f3a.txt
+│   ├── index.txt
 ├── scans
-│   ├── domain-target1
+│   ├── target1.com
+│   │   ├── cves.txt
+│   │   ├── katana_result.txt
+│   │   ├── link.txt
+│   │   ├── nuclei_findings.txt
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
+│   ├── target2.com
+│   │   ├── cves.txt
+│   │   ├── dirsearch_log.txt
+│   │   ├── dirsearch.txt
+│   │   ├── katana_result.txt
+│   │   ├── link.txt
+│   │   ├── nuclei_findings.txt
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
+│   ├── target3.com
+│   │   ├── cves.txt
+│   │   ├── katana_result.txt
+│   │   ├── link.txt
+│   │   ├── nuclei_findings.txt
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
+│   ├── target4.com
+│   │   ├── cves.txt
+│   │   ├── katana_result.txt
+│   │   ├── link.txt
+│   │   ├── nuclei_findings.txt
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
+│   ├── target5.com
+│   │   ├── cves.txt
+│   │   ├── dalfox.log
+│   │   ├── dalfox.txt
 │   │   ├── findings
 │   │   │   ├── 1.txt
 │   │   │   ├── 2.txt
 │   │   │   ├── 3.txt
-│   │   │   ├── findgs.txt
-│   │   │   
+│   │   │   ├── 4.txt
+│   │   │   └── findings.txt
 │   │   ├── katana_result.txt
 │   │   ├── link.txt
 │   │   ├── nuclei_findings.txt
-│   │   └── statics.txt
-│   ├── domain-target2
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
+│   ├── target6.com
+│   │   ├── cves.txt
+│   │   ├── dalfox.log
+│   │   ├── dalfox.txt
+│   │   ├── findings
 │   │   ├── katana_result.txt
 │   │   ├── link.txt
-│   │   ├── nuclei_findings.txt
-│   │   └── statics.txt
-│   ├── domain-target3
-│   │   ├── katana_result.txt
-│   │   ├── link.txt
-│   │   ├── nuclei_findings.txt
-│   │   └── statics.txt
-│   ├── domain-target4
-│   │   ├── katana_result.txt
-│   │   ├── link.txt
-│   │   ├── nuclei_findings.txt
-│   │   └── statics.txt
-│   │   └── katana_result.txt
+│   │   ├── nuclei_missing_headers.txt
+│   │   ├── statics.txt
+│   │   ├── takeover.txt
+│   │   ├── targets_url.txt
+│   │   └── technologies.txt
 ├── scope
 │   ├── dns_ptr.txt
 │   ├── live_target.txt
 │   ├── subdomains.txt
 │   └── target.txt
 └── screenshot
-    ├── gowitness.sqlite3 
+    ├── gowitness.sqlite3
+    ├── https---screeen1.jpeg
+    └── https---screen2.jpeg
 
 ```
