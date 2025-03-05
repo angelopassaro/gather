@@ -47,7 +47,7 @@ The output in save in current directory
 
 [Gowitness](https://github.com/sensepost/gowitness)
 
-[Param](https://github.com/devanshbatham/ParamSpider)
+[ParamSpider](https://github.com/devanshbatham/ParamSpider)
 
 [Dirsearch](https://github.com/maurosoria/dirsearch)
 
