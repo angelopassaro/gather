@@ -9,7 +9,7 @@ sudo mv ~/go/bin/httpx /usr/local/bin/
 go install -v github.com/projectdiscovery/dnsx/cmd/dnsx@latest
 sudo mv ~/go/bin/dnsx /usr/local/bin/
 go install github.com/tomnomnom/assetfinder@latest
-udo mv ~/go/bin/assetfinder /usr/local/bin/
+sudo mv ~/go/bin/assetfinder /usr/local/bin/
 go install -v github.com/projectdiscovery/subfinder/v2/cmd/subfinder@latest
 sudo mv ~/go/bin/subfinder /usr/local/bin/
 go install -v github.com/projectdiscovery/interactsh/cmd/interactsh-client@latest
